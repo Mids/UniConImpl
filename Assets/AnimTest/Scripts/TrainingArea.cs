@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ public class TrainingArea : MonoBehaviour
     public GameObject mannequinRef;
     private Animator _animatorRef;
     public float AnimationLength;
+    public List<Transform> InitialTransformList;
 
     public TextMeshPro cumulativeRewardText;
     private static readonly int Reset = Animator.StringToHash("Reset");
@@ -23,12 +25,25 @@ public class TrainingArea : MonoBehaviour
     {
         // var randomValue = Random.Range(0, _animationLength);
         var randomValue = 0;
-        _animatorRef.Play("HipHopDancing", 0, randomValue);
+        // _animatorRef.Play("HipHopDancing", 0, randomValue);
     }
 
     private void ResetAgent()
     {
-        
+        var refTransforms = mannequinRef.GetComponentsInChildren<Transform>().ToArray();
+        var agentTransforms = mannequinAgent.GetComponentsInChildren<Transform>().ToArray();
+        foreach (var refT in refTransforms)
+        {
+            foreach (var agentT in agentTransforms)
+            {
+                if (refT.name == agentT.name)
+                {
+                    if (agentT.name.Contains("Hips"))
+                        agentT.transform.localPosition = refT.transform.localPosition;
+                    agentT.transform.localRotation = refT.transform.localRotation;
+                }
+            }
+        }
     }
     
     // Start is called before the first frame update

@@ -319,6 +319,7 @@ MonoBehaviour:
   mannequinAgent: {fileID: 51491780404163385}
   mannequinRef: {fileID: 6556565606192576472}
   AnimationLength: 0
+  InitialTransformList: []
   cumulativeRewardText: {fileID: 3017891772361296168}
 --- !u!1001 &6868415772974137947
 PrefabInstance:

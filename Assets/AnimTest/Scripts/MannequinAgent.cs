@@ -26,7 +26,7 @@ public class MannequinAgent : Agent
         _ragdoll = GetComponent<RagdollController>();
 
         var transforms = _mannequinRef.GetComponentsInChildren<Transform>();
-        var data = RagdollData.RagdollDataDict.Values.ToArray();
+        var data = _ragdoll.RagdollDataDict.Values.ToArray();
 
         foreach (var t in transforms)
         {
@@ -53,7 +53,9 @@ public class MannequinAgent : Agent
          * 2+1+2+1+2+1+2+1+2+2 = 16
          */
         var actionsArray = actions.ContinuousActions.Array;
-        
+
+        // print("actionReceived");
+
         Assert.IsTrue(actionsArray.Length == 16);
 
         for (var i = 0; i < actionsArray.Length; i++) actionsArray[i] *= 20;
@@ -72,47 +74,51 @@ public class MannequinAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        var actions = actionsOut.ContinuousActions.Array;
-        for (var index = 0; index < actions.Length; index++)
-        {
-            actions[index] = 1f;
-        }
     }
 
     public override void OnEpisodeBegin()
     {
         _episodeTime = 0f;
         _trainingArea.ResetArea();
+        foreach (var ragdollData in _ragdoll.RagdollDataDict.Values) 
+            ragdollData.UpdatePrev();
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 1 + 3 * 10 = 31
-        var pelvis = RagdollData.RagdollDataDict[RagdollJoint.Pelvis];
+        // 9 * 11 = 33
+        var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
 
-        var pelvisRefPos = pelvis.RefTransform.position;
-        var pelvisAgentPos = pelvis.AgentTransform.position;
-        var pelvisDiff = pelvisRefPos.y - pelvisAgentPos.y;
+        var pelvisRefPos = pelvis.RefTransform.localPosition;
+        var pelvisAgentPos = pelvis.AgentTransform.localPosition;
+        var pelvisDiff = pelvisRefPos - pelvisAgentPos;
         sensor.AddObservation(pelvisDiff);
-        AddReward(0.1f - Mathf.Abs(pelvisDiff));
-        
+        sensor.AddObservation(pelvis.GetVelocity());
+        sensor.AddObservation(pelvis.GetAngularVelocity());
+        var mag = pelvisDiff.magnitude;
+        mag *= mag;
+        AddReward((1f - mag) * 0.1f);
+
         // print("pelvis reward: " + (0.1f - Mathf.Abs(pelvisDiff)));
-        
+
         foreach (RagdollJoint joint in Enum.GetValues(typeof(RagdollJoint)))
         {
             if (joint == RagdollJoint.Pelvis)
                 continue;
 
-            var data = RagdollData.RagdollDataDict[joint];
+            var data = _ragdoll.RagdollDataDict[joint];
 
-            var refPos = data.RefTransform.position - pelvisRefPos;
-            var agentPos = data.AgentTransform.position - pelvisAgentPos;
+            var refPos = data.RefTransform.position - pelvis.RefTransform.position;
+            var agentPos = data.AgentTransform.position - pelvis.AgentTransform.position;
 
             var jointDiff = refPos - agentPos;
-            
+
             sensor.AddObservation(jointDiff);
-            AddReward(0.2f - jointDiff.magnitude);
-            
+            sensor.AddObservation(data.GetVelocity());
+            sensor.AddObservation(data.GetAngularVelocity());
+
+            AddReward((1f - jointDiff.magnitude) * 0.01f);
+
             // print(joint + " reward: " + (0.2f - jointDiff.magnitude));
         }
     }
@@ -120,10 +126,49 @@ public class MannequinAgent : Agent
     // Update is called once per frame
     private void Update()
     {
+        // 3 + 3 * 10 = 31
+        var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
+
+        var pelvisRefPos = pelvis.RefTransform.localPosition;
+        var pelvisAgentPos = pelvis.AgentTransform.localPosition;
+        var pelvisDiff = pelvisRefPos - pelvisAgentPos;
+        if (Mathf.Abs(pelvisDiff.y) > 0.5f)
+        {
+            // print("pelvis too far :" + pelvisDiff.magnitude);
+
+            AddReward(-10f);
+            EndEpisode();
+        }
+
+        // print("pelvis reward: " + (0.1f - Mathf.Abs(pelvisDiff)));
+
+        foreach (RagdollJoint joint in Enum.GetValues(typeof(RagdollJoint)))
+        {
+            if (joint == RagdollJoint.Pelvis)
+                continue;
+
+            var data = _ragdoll.RagdollDataDict[joint];
+
+            var refPos = data.RefTransform.position - pelvis.RefTransform.position;
+            var agentPos = data.AgentTransform.position - pelvis.AgentTransform.position;
+
+            var jointDiff = refPos - agentPos;
+
+            if (joint == RagdollJoint.Head)
+                if (Mathf.Abs(jointDiff.y) > 0.5f)
+                {
+                    // print("head too far :" + jointDiff.magnitude);
+                    AddReward(-10f);
+                    EndEpisode();
+                }
+
+            // print(joint + " reward: " + (0.2f - jointDiff.magnitude));
+        }
+
         _episodeTime += Time.deltaTime;
         if (_episodeTime > _trainingArea.AnimationLength)
         {
-            print("end episode");
+            AddReward(10f);
             EndEpisode();
         }
     }

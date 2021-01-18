@@ -19,7 +19,41 @@ public enum RagdollJoint
 
 public class RagdollData
 {
-    public static readonly Dictionary<RagdollJoint, RagdollData> RagdollDataDict =
+    public string Name;
+    public Transform RefTransform;
+    public Transform AgentTransform;
+    public CharacterJoint CharacterJointComp;
+    public Rigidbody RigidbodyComp;
+    public Vector3 PrevPosition;
+    public Quaternion PrevRotation;
+    public float PrevTime;
+
+    public RagdollData(string name)
+    {
+        Name = name;
+    }
+
+    public void UpdatePrev()
+    {
+        PrevPosition = RefTransform.localPosition;
+        PrevRotation = RefTransform.localRotation;
+        PrevTime = Time.time;
+    }
+
+    public Vector3 GetVelocity()
+    {
+        return RigidbodyComp.velocity;
+    }
+
+    public Vector3 GetAngularVelocity()
+    {
+        return RigidbodyComp.angularVelocity;
+    }
+}
+
+public class RagdollController : MonoBehaviour
+{
+    public readonly Dictionary<RagdollJoint, RagdollData> RagdollDataDict =
         new Dictionary<RagdollJoint, RagdollData>
         {
             {RagdollJoint.Pelvis, new RagdollData("Hips")},
@@ -34,27 +68,13 @@ public class RagdollData
             {RagdollJoint.MiddleSpine, new RagdollData("Spine1")},
             {RagdollJoint.Head, new RagdollData("Head")},
         };
-
-    public string Name;
-    public Transform RefTransform;
-    public Transform AgentTransform;
-    public CharacterJoint CharacterJointComp;
-    public Rigidbody RigidbodyComp;
-
-    public RagdollData(string name)
-    {
-        Name = name;
-    }
-}
-
-public class RagdollController : MonoBehaviour
-{
+    
     // Start is called before the first frame update
     private void Start()
     {
-        var ragdollDatas = RagdollData.RagdollDataDict.Values.ToArray();
+        var ragdollDatas = RagdollDataDict.Values.ToArray();
 
-        var keys = RagdollData.RagdollDataDict.Keys;
+        var keys = RagdollDataDict.Keys;
 
         var transforms = GetComponentsInChildren<Transform>();
 
@@ -82,8 +102,8 @@ public class RagdollController : MonoBehaviour
 
     public void AddTorque(RagdollJoint joint, Vector3 force)
     {
-        if (!RagdollData.RagdollDataDict.ContainsKey(joint)) return;
+        if (!RagdollDataDict.ContainsKey(joint)) return;
 
-        RagdollData.RagdollDataDict[joint].RigidbodyComp.AddTorque(force);
+        RagdollDataDict[joint].RigidbodyComp.AddTorque(force);
     }
 }
