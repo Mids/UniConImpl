@@ -7,12 +7,16 @@ public enum RagdollJoint
     Pelvis,
     LeftHips, // X, Y
     LeftKnee, // X
+    LeftFoot,
     RightHips, // X, Y
     RightKnee, // X
+    RightFoot,
     LeftArm, // X, Y
     LeftElbow, // X
+    LeftHand,
     RightArm, // X, Y
     RightElbow, // X
+    RightHand,
     MiddleSpine, // X, Y
     Head, // X, Y
 }
@@ -59,12 +63,16 @@ public class RagdollController : MonoBehaviour
             {RagdollJoint.Pelvis, new RagdollData("Hips")},
             {RagdollJoint.LeftHips, new RagdollData("LeftUpLeg")},
             {RagdollJoint.LeftKnee, new RagdollData("LeftLeg")},
+            {RagdollJoint.LeftFoot, new RagdollData("LeftToeBase")},
             {RagdollJoint.RightHips, new RagdollData("RightUpLeg")},
             {RagdollJoint.RightKnee, new RagdollData("RightLeg")},
+            {RagdollJoint.RightFoot, new RagdollData("RightToeBase")},
             {RagdollJoint.LeftArm, new RagdollData("LeftArm")},
             {RagdollJoint.LeftElbow, new RagdollData("LeftForeArm")},
+            {RagdollJoint.LeftHand, new RagdollData("LeftHand")},
             {RagdollJoint.RightArm, new RagdollData("RightArm")},
             {RagdollJoint.RightElbow, new RagdollData("RightForeArm")},
+            {RagdollJoint.RightHand, new RagdollData("RightHand")},
             {RagdollJoint.MiddleSpine, new RagdollData("Spine1")},
             {RagdollJoint.Head, new RagdollData("Head")},
         };

@@ -89,7 +89,7 @@ public class MannequinAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 16 * 11 = 176
+        // 16 * 15 = 240
         var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
 
         var pelvisRefPos = pelvis.RefTransform.localPosition;
