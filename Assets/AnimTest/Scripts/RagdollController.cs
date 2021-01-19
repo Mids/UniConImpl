@@ -24,20 +24,20 @@ public class RagdollData
     public Transform AgentTransform;
     public CharacterJoint CharacterJointComp;
     public Rigidbody RigidbodyComp;
-    public Vector3 PrevPosition;
-    public Quaternion PrevRotation;
-    public float PrevTime;
 
     public RagdollData(string name)
     {
         Name = name;
     }
 
-    public void UpdatePrev()
+    public Vector3 GetPosition()
     {
-        PrevPosition = RefTransform.localPosition;
-        PrevRotation = RefTransform.localRotation;
-        PrevTime = Time.time;
+        return AgentTransform.localPosition;
+    }
+
+    public Quaternion GetRotation()
+    {
+        return AgentTransform.localRotation;
     }
 
     public Vector3 GetVelocity()

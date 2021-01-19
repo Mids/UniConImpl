@@ -80,19 +80,24 @@ public class MannequinAgent : Agent
     {
         _episodeTime = 0f;
         _trainingArea.ResetArea();
-        foreach (var ragdollData in _ragdoll.RagdollDataDict.Values) 
-            ragdollData.UpdatePrev();
+        foreach (var ragdollData in _ragdoll.RagdollDataDict.Values)
+        {
+            ragdollData.RigidbodyComp.velocity = Vector3.zero;
+            ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
+        }
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 9 * 11 = 33
+        // 16 * 11 = 176
         var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
 
         var pelvisRefPos = pelvis.RefTransform.localPosition;
         var pelvisAgentPos = pelvis.AgentTransform.localPosition;
         var pelvisDiff = pelvisRefPos - pelvisAgentPos;
         sensor.AddObservation(pelvisDiff);
+        sensor.AddObservation(pelvis.GetPosition());
+        sensor.AddObservation(pelvis.GetRotation());
         sensor.AddObservation(pelvis.GetVelocity());
         sensor.AddObservation(pelvis.GetAngularVelocity());
         var mag = pelvisDiff.magnitude;
@@ -114,6 +119,8 @@ public class MannequinAgent : Agent
             var jointDiff = refPos - agentPos;
 
             sensor.AddObservation(jointDiff);
+            sensor.AddObservation(data.GetPosition());
+            sensor.AddObservation(data.GetRotation());
             sensor.AddObservation(data.GetVelocity());
             sensor.AddObservation(data.GetAngularVelocity());
 
