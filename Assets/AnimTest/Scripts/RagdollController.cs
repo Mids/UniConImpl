@@ -23,10 +23,27 @@ public enum RagdollJoint
 
 public class RagdollData
 {
+    public static readonly Dictionary<RagdollJoint, string> RagdollJointNames = new Dictionary<RagdollJoint, string>()
+    {
+        {RagdollJoint.Pelvis, "Hips"},
+        {RagdollJoint.LeftHips, "LeftUpLeg"},
+        {RagdollJoint.LeftKnee, "LeftLeg"},
+        {RagdollJoint.LeftFoot, "LeftToeBase"},
+        {RagdollJoint.RightHips, "RightUpLeg"},
+        {RagdollJoint.RightKnee, "RightLeg"},
+        {RagdollJoint.RightFoot, "RightToeBase"},
+        {RagdollJoint.LeftArm, "LeftArm"},
+        {RagdollJoint.LeftElbow, "LeftForeArm"},
+        {RagdollJoint.LeftHand, "LeftHand"},
+        {RagdollJoint.RightArm, "RightArm"},
+        {RagdollJoint.RightElbow, "RightForeArm"},
+        {RagdollJoint.RightHand, "RightHand"},
+        {RagdollJoint.MiddleSpine, "Spine1"},
+        {RagdollJoint.Head, "Head"},
+    };
+    
     public string Name;
-    public Transform RefTransform;
     public Transform AgentTransform;
-    public CharacterJoint CharacterJointComp;
     public Rigidbody RigidbodyComp;
 
     public RagdollData(string name)
@@ -36,10 +53,20 @@ public class RagdollData
 
     public Vector3 GetPosition()
     {
-        return AgentTransform.localPosition;
+        return AgentTransform.position;
     }
 
     public Quaternion GetRotation()
+    {
+        return AgentTransform.rotation;
+    }
+
+    public Vector3 GetLocalPosition()
+    {
+        return AgentTransform.localPosition;
+    }
+
+    public Quaternion GetLocalRotation()
     {
         return AgentTransform.localRotation;
     }
@@ -58,44 +85,24 @@ public class RagdollData
 public class RagdollController : MonoBehaviour
 {
     public readonly Dictionary<RagdollJoint, RagdollData> RagdollDataDict =
-        new Dictionary<RagdollJoint, RagdollData>
-        {
-            {RagdollJoint.Pelvis, new RagdollData("Hips")},
-            {RagdollJoint.LeftHips, new RagdollData("LeftUpLeg")},
-            {RagdollJoint.LeftKnee, new RagdollData("LeftLeg")},
-            {RagdollJoint.LeftFoot, new RagdollData("LeftToeBase")},
-            {RagdollJoint.RightHips, new RagdollData("RightUpLeg")},
-            {RagdollJoint.RightKnee, new RagdollData("RightLeg")},
-            {RagdollJoint.RightFoot, new RagdollData("RightToeBase")},
-            {RagdollJoint.LeftArm, new RagdollData("LeftArm")},
-            {RagdollJoint.LeftElbow, new RagdollData("LeftForeArm")},
-            {RagdollJoint.LeftHand, new RagdollData("LeftHand")},
-            {RagdollJoint.RightArm, new RagdollData("RightArm")},
-            {RagdollJoint.RightElbow, new RagdollData("RightForeArm")},
-            {RagdollJoint.RightHand, new RagdollData("RightHand")},
-            {RagdollJoint.MiddleSpine, new RagdollData("Spine1")},
-            {RagdollJoint.Head, new RagdollData("Head")},
-        };
-    
+        new Dictionary<RagdollJoint, RagdollData>();
+
     // Start is called before the first frame update
     private void Start()
     {
-        var ragdollDatas = RagdollDataDict.Values.ToArray();
+        foreach (var kvp in RagdollData.RagdollJointNames) 
+            RagdollDataDict[kvp.Key] = new RagdollData(kvp.Value);
 
-        var keys = RagdollDataDict.Keys;
+        var ragdollDatas = RagdollDataDict.Values.ToArray();
 
         var transforms = GetComponentsInChildren<Transform>();
 
         foreach (var t in transforms)
         {
             var data = ragdollDatas.FirstOrDefault(p => t.name.Contains(p.Name));
-            if(data == default) continue;
-            
-            data.AgentTransform = t;
+            if (data == default) continue;
 
-            var joint = t.GetComponent<CharacterJoint>();
-            if (joint != default)
-                data.CharacterJointComp = joint;
+            data.AgentTransform = t;
 
             var rigidbodyComp = t.GetComponent<Rigidbody>();
             if (rigidbodyComp != default)

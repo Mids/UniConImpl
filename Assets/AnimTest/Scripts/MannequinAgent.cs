@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using TMPro;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
@@ -10,31 +11,36 @@ using UnityEngine.Assertions;
 [RequireComponent(typeof(BehaviorParameters))]
 public class MannequinAgent : Agent
 {
-    private TrainingArea _trainingArea;
+    public TextMeshPro cumulativeRewardText;
 
-    private GameObject _mannequinRef;
+    private TrainingArea _trainingArea;
 
     private RagdollController _ragdoll;
 
     private float _episodeTime = 0f;
+    private float _initTime = 0f;
+    private bool _isStarted = false;
+    private bool _isTerminated = false;
+
+    private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
+
+    private Queue<Dictionary<RagdollJoint, Quaternion>> _refRotations =
+        new Queue<Dictionary<RagdollJoint, Quaternion>>();
+
+    public int targetStatesLength = 3;
+
+
+    public float rewardRootPos = 0.2f;
+    public float rewardRootRot = 0.2f;
+    public float rewardJointPos = 0.1f;
+    public float rewardJointRot = 0.4f;
+    public float rewardJointAngVel = 0.1f;
 
     public override void Initialize()
     {
         base.Initialize();
         _trainingArea = GetComponentInParent<TrainingArea>();
-        _mannequinRef = _trainingArea.mannequinRef;
         _ragdoll = GetComponent<RagdollController>();
-
-        var transforms = _mannequinRef.GetComponentsInChildren<Transform>();
-        var data = _ragdoll.RagdollDataDict.Values.ToArray();
-
-        foreach (var t in transforms)
-        {
-            var datum = data.FirstOrDefault(p => t.name.Contains(p.Name));
-            if (datum == default) continue;
-
-            datum.RefTransform = t;
-        }
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -58,7 +64,7 @@ public class MannequinAgent : Agent
 
         Assert.IsTrue(actionsArray.Length == 16);
 
-        for (var i = 0; i < actionsArray.Length; i++) actionsArray[i] *= 20;
+        for (var i = 0; i < actionsArray.Length; i++) actionsArray[i] *= 100;
 
         _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
         _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
@@ -70,6 +76,8 @@ public class MannequinAgent : Agent
         _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], 0f, 0f);
         _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
         _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
+        
+        CalculateReward();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -79,9 +87,18 @@ public class MannequinAgent : Agent
     public override void OnEpisodeBegin()
     {
         _episodeTime = 0f;
-        _trainingArea.ResetArea();
-        foreach (var ragdollData in _ragdoll.RagdollDataDict.Values)
+        _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
+                    * _trainingArea.animationLength;
+        _isStarted = false;
+
+        foreach (var kvp in _ragdoll.RagdollDataDict)
         {
+            var joint = kvp.Key;
+            var ragdollData = kvp.Value;
+            var transformData = _trainingArea.GetTransformData(_initTime, joint);
+
+            ragdollData.AgentTransform.localPosition = transformData.localPosition;
+            ragdollData.AgentTransform.localRotation = transformData.localRotation;
             ragdollData.RigidbodyComp.velocity = Vector3.zero;
             ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
         }
@@ -89,94 +106,144 @@ public class MannequinAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 16 * 15 = 240
-        var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
+        // 193 + 600 = 793
+        var animationTime = _initTime + _episodeTime;
+        var currentFrame = _trainingArea.GetFrame(animationTime);
+        var joints = Enum.GetValues(typeof(RagdollJoint));
 
-        var pelvisRefPos = pelvis.RefTransform.localPosition;
-        var pelvisAgentPos = pelvis.AgentTransform.localPosition;
-        var pelvisDiff = pelvisRefPos - pelvisAgentPos;
-        sensor.AddObservation(pelvisDiff);
-        sensor.AddObservation(pelvis.GetPosition());
-        sensor.AddObservation(pelvis.GetRotation());
-        sensor.AddObservation(pelvis.GetVelocity());
-        sensor.AddObservation(pelvis.GetAngularVelocity());
-        var mag = pelvisDiff.magnitude;
-        mag *= mag;
-        AddReward((1f - mag) * 0.1f);
+        // Current State (15 * 13 - 2) = 193
+        var root = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
+        sensor.AddObservation(root.GetLocalPosition().y);
+        sensor.AddObservation(root.GetLocalRotation());
+        sensor.AddObservation(root.GetVelocity());
+        sensor.AddObservation(root.GetAngularVelocity());
 
-        // print("pelvis reward: " + (0.1f - Mathf.Abs(pelvisDiff)));
-
-        foreach (RagdollJoint joint in Enum.GetValues(typeof(RagdollJoint)))
+        foreach (RagdollJoint joint in joints)
         {
-            if (joint == RagdollJoint.Pelvis)
-                continue;
+            if (joint == RagdollJoint.Pelvis) continue;
 
             var data = _ragdoll.RagdollDataDict[joint];
 
-            var refPos = data.RefTransform.position - pelvis.RefTransform.position;
-            var agentPos = data.AgentTransform.position - pelvis.AgentTransform.position;
-
-            var jointDiff = refPos - agentPos;
-
-            sensor.AddObservation(jointDiff);
-            sensor.AddObservation(data.GetPosition());
-            sensor.AddObservation(data.GetRotation());
+            sensor.AddObservation(data.GetPosition() - root.GetPosition());
+            sensor.AddObservation(data.GetRotation() * Quaternion.Inverse(root.GetRotation()));
             sensor.AddObservation(data.GetVelocity());
             sensor.AddObservation(data.GetAngularVelocity());
+        }
 
-            AddReward((1f - jointDiff.magnitude) * 0.01f);
+        // Target State (15*13 - 2 + 3 + 4) * 3 = 600
+        var stateFrame = currentFrame;
+        for (int i = 0; i < targetStatesLength; ++i)
+        {
+            stateFrame = _trainingArea.GetNextFrame(stateFrame);
 
-            // print(joint + " reward: " + (0.2f - jointDiff.magnitude));
+            var pelvis = _trainingArea.GetTransformData(stateFrame, RagdollJoint.Pelvis);
+
+            // Root Trajectory 
+            sensor.AddObservation(pelvis.position - root.GetPosition());
+            sensor.AddObservation(pelvis.rotation * Quaternion.Inverse(root.GetRotation()));
+
+            sensor.AddObservation(pelvis.localPosition.y);
+            sensor.AddObservation(pelvis.localRotation);
+            sensor.AddObservation(pelvis.velocity);
+            sensor.AddObservation(pelvis.angularVelocity);
+
+            foreach (RagdollJoint joint in joints)
+            {
+                if (joint == RagdollJoint.Pelvis) continue;
+
+                var data = _trainingArea.GetTransformData(stateFrame, joint);
+
+                sensor.AddObservation(data.position - pelvis.position);
+                sensor.AddObservation(data.rotation * Quaternion.Inverse(pelvis.rotation));
+                sensor.AddObservation(data.velocity);
+                sensor.AddObservation(data.angularVelocity);
+            }
         }
     }
 
-    // Update is called once per frame
-    private void Update()
+    public void CalculateReward()
     {
-        // 3 + 3 * 10 = 31
-        var pelvis = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
-
-        var pelvisRefPos = pelvis.RefTransform.localPosition;
-        var pelvisAgentPos = pelvis.AgentTransform.localPosition;
-        var pelvisDiff = pelvisRefPos - pelvisAgentPos;
-        if (Mathf.Abs(pelvisDiff.y) > 0.5f)
+        if (!_isStarted)
         {
-            // print("pelvis too far :" + pelvisDiff.magnitude);
-
-            AddReward(-10f);
-            EndEpisode();
+            _isStarted = true;
+            return;
         }
 
-        // print("pelvis reward: " + (0.1f - Mathf.Abs(pelvisDiff)));
+        _isTerminated = false;
+        
+        SetReward(0);
 
-        foreach (RagdollJoint joint in Enum.GetValues(typeof(RagdollJoint)))
+        // 193 + 600 = 793
+        var animationTime = _initTime + _episodeTime;
+        var joints = Enum.GetValues(typeof(RagdollJoint));
+
+        // TODO: Recalculate reward function
+        var root = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
+        var targetRoot = _trainingArea.GetTransformData(animationTime, RagdollJoint.Pelvis);
+
+        var posReward = (root.GetLocalPosition() - targetRoot.localPosition).magnitude / 1;
+        posReward *= posReward / 5;
+        if (posReward > 0.06) _isTerminated = true;
+        AddReward(0.03f - posReward);
+
+        var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 90; // 90 degrees
+        rotReward *= rotReward / 5;
+        if (rotReward > 0.06) _isTerminated = true;
+        AddReward(0.03f - rotReward);
+
+        // print($"Root posReward: {posReward}, rotReward: {rotReward}");
+
+        foreach (RagdollJoint joint in joints)
         {
-            if (joint == RagdollJoint.Pelvis)
+            if (joint != RagdollJoint.Head
+                && joint != RagdollJoint.LeftHand
+                && joint != RagdollJoint.RightHand
+                && joint != RagdollJoint.LeftFoot
+                && joint != RagdollJoint.RightFoot)
                 continue;
 
             var data = _ragdoll.RagdollDataDict[joint];
+            var targetData = _trainingArea.GetTransformData(animationTime, joint);
 
-            var refPos = data.RefTransform.position - pelvis.RefTransform.position;
-            var agentPos = data.AgentTransform.position - pelvis.AgentTransform.position;
+            var posDiff = data.GetPosition() - root.GetPosition() - (targetData.position - targetRoot.position);
+            var jointPosReward = posDiff.magnitude;
+            jointPosReward *= jointPosReward / 50;
+            
+            // if (jointPosReward > 0.01f) _isTerminated = true;
+            AddReward(0.003f - jointPosReward);
 
-            var jointDiff = refPos - agentPos;
+            var rotDiff = Quaternion.Angle(data.GetRotation(), root.GetRotation()) -
+                          Quaternion.Angle(targetData.rotation, targetRoot.rotation);
+            var jointRotReward = Mathf.Abs(rotDiff) / 90;
+            jointRotReward *= jointRotReward / 13;
+            // if (jointRotReward > 0.04f) _isTerminated = true;
+            AddReward(0.012f - jointRotReward);
 
-            if (joint == RagdollJoint.Head)
-                if (Mathf.Abs(jointDiff.y) > 0.5f)
-                {
-                    // print("head too far :" + jointDiff.magnitude);
-                    AddReward(-10f);
-                    EndEpisode();
-                }
-
-            // print(joint + " reward: " + (0.2f - jointDiff.magnitude));
+            // var jointAngVelReward = (data.GetAngularVelocity() - targetData.angularVelocity).magnitude / 5000;
+            // if (jointAngVelReward > 0.01f) _isTerminated = true;
+            // AddReward(0.01f - jointAngVelReward);
         }
 
         _episodeTime += Time.deltaTime;
-        if (_episodeTime > _trainingArea.AnimationLength)
+        if (_episodeTime > _trainingArea.animationLength)
         {
-            AddReward(10f);
-            EndEpisode();
+            _isTerminated = true;
         }
+
+        if (_isTerminated)
+        {
+            EarlyTerminate();
+        }
+    }
+
+    public void EarlyTerminate()
+    {
+        AddReward(-1f + 2 * _episodeTime / _trainingArea.animationLength);
+        EndEpisode();
+    }
+    
+    private void Update()
+    {
+        cumulativeRewardText.text = GetCumulativeReward().ToString("0.00");
     }
 }
