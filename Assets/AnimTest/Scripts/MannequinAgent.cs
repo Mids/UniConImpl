@@ -21,6 +21,8 @@ public class MannequinAgent : Agent
     private float _initTime = 0f;
     private bool _isStarted = false;
     private bool _isTerminated = false;
+    private int _earlyTerminationStack = 0;
+    private const int EarlyTerminationMax = 15;
 
     private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
 
@@ -35,6 +37,7 @@ public class MannequinAgent : Agent
     public float rewardJointPos = 0.1f;
     public float rewardJointRot = 0.4f;
     public float rewardJointAngVel = 0.1f;
+    
 
     public override void Initialize()
     {
@@ -90,6 +93,7 @@ public class MannequinAgent : Agent
         _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
                     * _trainingArea.animationLength;
         _isStarted = false;
+        _earlyTerminationStack = 0;
 
         foreach (var kvp in _ragdoll.RagdollDataDict)
         {
@@ -181,15 +185,10 @@ public class MannequinAgent : Agent
         var root = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
         var targetRoot = _trainingArea.GetTransformData(animationTime, RagdollJoint.Pelvis);
 
-        var posReward = (root.GetLocalPosition() - targetRoot.localPosition).magnitude / 1;
-        posReward *= posReward / 5;
-        if (posReward > 0.06) _isTerminated = true;
-        AddReward(0.03f - posReward);
+        var posReward = (root.GetLocalPosition() - targetRoot.localPosition).sqrMagnitude;
 
-        var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 90; // 90 degrees
-        rotReward *= rotReward / 5;
-        if (rotReward > 0.06) _isTerminated = true;
-        AddReward(0.03f - rotReward);
+        var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 180 * Mathf.PI; // degrees
+        rotReward *= rotReward;
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
@@ -206,39 +205,52 @@ public class MannequinAgent : Agent
             var targetData = _trainingArea.GetTransformData(animationTime, joint);
 
             var posDiff = data.GetPosition() - root.GetPosition() - (targetData.position - targetRoot.position);
-            var jointPosReward = posDiff.magnitude;
-            jointPosReward *= jointPosReward / 50;
-            
-            // if (jointPosReward > 0.01f) _isTerminated = true;
-            AddReward(0.003f - jointPosReward);
+            var jointPosReward = posDiff.sqrMagnitude / 5;
+            posReward += jointPosReward;
 
             var rotDiff = Quaternion.Angle(data.GetRotation(), root.GetRotation()) -
                           Quaternion.Angle(targetData.rotation, targetRoot.rotation);
-            var jointRotReward = Mathf.Abs(rotDiff) / 90;
-            jointRotReward *= jointRotReward / 13;
-            // if (jointRotReward > 0.04f) _isTerminated = true;
-            AddReward(0.012f - jointRotReward);
+            var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
+            jointRotReward *= jointRotReward / 5;
+            rotReward += jointRotReward;
 
             // var jointAngVelReward = (data.GetAngularVelocity() - targetData.angularVelocity).magnitude / 5000;
             // if (jointAngVelReward > 0.01f) _isTerminated = true;
             // AddReward(0.01f - jointAngVelReward);
+            
+            // print($"{joint} posReward: {jointPosReward}, rotReward: {jointRotReward}");
         }
+        
+        posReward = Mathf.Exp(-2 * posReward);
+        if (posReward < 0.5) _isTerminated = true;
 
-        _episodeTime += Time.deltaTime;
+        rotReward = Mathf.Exp(-2 * rotReward);
+        if (rotReward < 0.5) _isTerminated = true;
+        AddReward(posReward + rotReward - 1);
+        
+        // print($"Total reward: {posReward} + {rotReward} = {posReward + rotReward}");
+
+        _episodeTime += Time.fixedDeltaTime;
         if (_episodeTime > _trainingArea.animationLength)
         {
+            _earlyTerminationStack = EarlyTerminationMax;
             _isTerminated = true;
         }
-
+        
         if (_isTerminated)
         {
             EarlyTerminate();
         }
     }
 
-    public void EarlyTerminate()
+    private void EarlyTerminate()
     {
-        AddReward(-1f + 2 * _episodeTime / _trainingArea.animationLength);
+        if (++_earlyTerminationStack < EarlyTerminationMax) return;
+
+        var timeRatio = _episodeTime / _trainingArea.animationLength;
+        timeRatio *= timeRatio;
+        
+        AddReward(-1f + 2 * timeRatio);
         EndEpisode();
     }
     
