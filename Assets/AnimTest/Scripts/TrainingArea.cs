@@ -50,7 +50,7 @@ public class TrainingArea : MonoBehaviour
         {
             _animatorRef.Play("Idle", 0, passedTime / animationLength);
 
-            yield return null;
+            yield return new WaitForFixedUpdate();
 
             var newDict = new Dictionary<RagdollJoint, TransformData>();
 
@@ -66,6 +66,8 @@ public class TrainingArea : MonoBehaviour
 
             passedTime += deltaTime;
         }
+        
+        print($"Total frame: {RefList.Count}");
 
         for (var index = 0; index < RefList.Count; index++)
         {
@@ -88,7 +90,7 @@ public class TrainingArea : MonoBehaviour
 
         _animatorRef.speed = 1f;
 
-        int size = 5;
+        int size = 4;
         int gap = 3;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)

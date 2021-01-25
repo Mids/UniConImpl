@@ -121,4 +121,22 @@ public class RagdollController : MonoBehaviour
 
         RagdollDataDict[joint].RigidbodyComp.AddTorque(force);
     }
+
+    public Vector3 GetCenterOfMass()
+    {
+        var mass = 0f;
+        var centerOfMass = Vector3.zero;
+        
+        foreach (var rb in RagdollDataDict.Select(ragdollData => ragdollData.Value.RigidbodyComp))
+        {
+            rb.ResetCenterOfMass();
+         
+            mass += rb.mass;
+            centerOfMass += (rb.transform.position - transform.position + rb.centerOfMass) * rb.mass;
+        }
+
+        centerOfMass /= mass;
+        
+        return centerOfMass;
+    }
 }

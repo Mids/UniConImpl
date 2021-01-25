@@ -23,6 +23,7 @@ public class MannequinAgent : Agent
     private bool _isTerminated = false;
     private int _earlyTerminationStack = 0;
     private const int EarlyTerminationMax = 15;
+    private int _currentFrame = -1;
 
     private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
 
@@ -37,7 +38,8 @@ public class MannequinAgent : Agent
     public float rewardJointPos = 0.1f;
     public float rewardJointRot = 0.4f;
     public float rewardJointAngVel = 0.1f;
-    
+
+    private Vector3 _centerOfMass;
 
     public override void Initialize()
     {
@@ -94,6 +96,7 @@ public class MannequinAgent : Agent
                     * _trainingArea.animationLength;
         _isStarted = false;
         _earlyTerminationStack = 0;
+        _currentFrame = -1;
 
         foreach (var kvp in _ragdoll.RagdollDataDict)
         {
@@ -106,6 +109,8 @@ public class MannequinAgent : Agent
             ragdollData.RigidbodyComp.velocity = Vector3.zero;
             ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
         }
+
+        _centerOfMass = _ragdoll.GetCenterOfMass();
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -172,13 +177,18 @@ public class MannequinAgent : Agent
             _isStarted = true;
             return;
         }
+        
+        var animationTime = _initTime + _episodeTime;
+        var curFrame = _trainingArea.GetFrame(animationTime);
+        if (_currentFrame == curFrame) return;
+        
+        _currentFrame = curFrame;
 
         _isTerminated = false;
         
         SetReward(0);
 
         // 193 + 600 = 793
-        var animationTime = _initTime + _episodeTime;
         var joints = Enum.GetValues(typeof(RagdollJoint));
 
         // TODO: Recalculate reward function
@@ -189,6 +199,9 @@ public class MannequinAgent : Agent
 
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
+
+        var comReward = (_ragdoll.GetCenterOfMass() - _centerOfMass).magnitude;
+        if (float.IsNaN(comReward)) return;
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
@@ -226,9 +239,11 @@ public class MannequinAgent : Agent
 
         rotReward = Mathf.Exp(-2 * rotReward);
         if (rotReward < 0.5) _isTerminated = true;
-        AddReward(posReward + rotReward - 1);
+
+        comReward = Mathf.Exp(-20 * comReward);
+        AddReward((posReward + rotReward + comReward)/3 - 1);
         
-        // print($"Total reward: {posReward} + {rotReward} = {posReward + rotReward}");
+        // print($"Total reward: {posReward} + {rotReward} + {comReward} = {posReward + rotReward + comReward}");
 
         _episodeTime += Time.fixedDeltaTime;
         if (_episodeTime > _trainingArea.animationLength)
@@ -250,7 +265,7 @@ public class MannequinAgent : Agent
         var timeRatio = _episodeTime / _trainingArea.animationLength;
         timeRatio *= timeRatio;
         
-        AddReward(-1f + 2 * timeRatio);
+        AddReward(-5f + 10 * timeRatio);
         EndEpisode();
     }
     
