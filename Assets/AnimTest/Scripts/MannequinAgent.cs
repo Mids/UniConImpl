@@ -22,7 +22,7 @@ public class MannequinAgent : Agent
     private bool _isStarted = false;
     private bool _isTerminated = false;
     private int _earlyTerminationStack = 0;
-    private const int EarlyTerminationMax = 15;
+    private const int EarlyTerminationMax = 1;
     private int _currentFrame = -1;
 
     private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
@@ -39,7 +39,7 @@ public class MannequinAgent : Agent
     public float rewardJointRot = 0.4f;
     public float rewardJointAngVel = 0.1f;
 
-    private Vector3 _centerOfMass;
+    private Vector3 _prevCenterOfMass;
 
     public override void Initialize()
     {
@@ -82,6 +82,7 @@ public class MannequinAgent : Agent
         _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
         _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
         
+        _episodeTime += Time.fixedDeltaTime;
         CalculateReward();
     }
 
@@ -110,7 +111,7 @@ public class MannequinAgent : Agent
             ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
         }
 
-        _centerOfMass = _ragdoll.GetCenterOfMass();
+        _prevCenterOfMass = _trainingArea.GetTransformData(_initTime, RagdollJoint.Pelvis).centerOfMass;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -200,8 +201,14 @@ public class MannequinAgent : Agent
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
-        var comReward = (_ragdoll.GetCenterOfMass() - _centerOfMass).magnitude;
-        if (float.IsNaN(comReward)) return;
+        var comVelocity = (_ragdoll.GetCenterOfMass() - _prevCenterOfMass) / Time.fixedDeltaTime;
+        var comReward = (comVelocity - targetRoot.comVelocity).sqrMagnitude;
+        _prevCenterOfMass = _ragdoll.GetCenterOfMass();
+        if (float.IsNaN(comReward))
+        {
+            print($"NaN");
+            return;
+        }
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
@@ -235,17 +242,17 @@ public class MannequinAgent : Agent
         }
         
         posReward = Mathf.Exp(-2 * posReward);
-        if (posReward < 0.5) _isTerminated = true;
+        if (posReward < 0.3) _isTerminated = true;
 
         rotReward = Mathf.Exp(-2 * rotReward);
-        if (rotReward < 0.5) _isTerminated = true;
+        if (rotReward < 0.3) _isTerminated = true;
 
         comReward = Mathf.Exp(-20 * comReward);
-        AddReward((posReward + rotReward + comReward)/3 - 1);
+        // if (comReward < 0.3) _isTerminated = true;
+        AddReward((posReward + rotReward + comReward)/3 - 0.3f);
         
         // print($"Total reward: {posReward} + {rotReward} + {comReward} = {posReward + rotReward + comReward}");
 
-        _episodeTime += Time.fixedDeltaTime;
         if (_episodeTime > _trainingArea.animationLength)
         {
             _earlyTerminationStack = EarlyTerminationMax;

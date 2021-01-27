@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class TransformData
 {
@@ -11,6 +12,8 @@ public class TransformData
     public Quaternion localRotation;
     public Vector3 velocity;
     public Vector3 angularVelocity;
+    public Vector3 centerOfMass;
+    public Vector3 comVelocity;
 
     public TransformData(Transform t)
     {
@@ -25,15 +28,21 @@ public class TrainingArea : MonoBehaviour
 {
     public MannequinAgent mannequinAgentPrefab;
     public GameObject mannequinRef;
+
+    [HideInInspector]
     public Animator _animatorRef;
+
+    private Rigidbody[] _rigidbody;
     public float animationLength;
+
+    public AnimationClip animationClip;
 
     private static readonly int Reset = Animator.StringToHash("Reset");
 
     public List<Dictionary<RagdollJoint, TransformData>> RefList = new List<Dictionary<RagdollJoint, TransformData>>();
 
     private float passedTime = 0f;
-    public const float deltaTime = 0.008f;
+    public const float deltaTime = 0.1f;
 
 
     // Start is called before the first frame update
@@ -41,6 +50,7 @@ public class TrainingArea : MonoBehaviour
     {
         _animatorRef = mannequinRef.GetComponentInChildren<Animator>();
         _animatorRef.speed = 0f;
+        _rigidbody = mannequinRef.GetComponentsInChildren<Rigidbody>();
         animationLength = _animatorRef.GetCurrentAnimatorClipInfo(0)[0].clip.length;
 
         var refTransforms = _animatorRef.GetComponentsInChildren<Transform>();
@@ -48,9 +58,9 @@ public class TrainingArea : MonoBehaviour
 
         while (passedTime < animationLength)
         {
-            _animatorRef.Play("Idle", 0, passedTime / animationLength);
+            _animatorRef.Play(animationClip.name, 0, passedTime / animationLength);
 
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForEndOfFrame();
 
             var newDict = new Dictionary<RagdollJoint, TransformData>();
 
@@ -62,11 +72,13 @@ public class TrainingArea : MonoBehaviour
                 newDict[kvp.Key] = new TransformData(t);
             }
 
+            newDict[RagdollJoint.Pelvis].centerOfMass = GetCenterOfMass(_rigidbody);
+
             RefList.Add(newDict);
 
             passedTime += deltaTime;
         }
-        
+
         print($"Total frame: {RefList.Count}");
 
         for (var index = 0; index < RefList.Count; index++)
@@ -86,6 +98,9 @@ public class TrainingArea : MonoBehaviour
                 data.velocity = (nextData.position - data.position) / deltaTime;
                 data.angularVelocity = GetAngularVelocity(data.rotation, nextData.rotation);
             }
+
+            dict[RagdollJoint.Pelvis].comVelocity =
+                (nextDict[RagdollJoint.Pelvis].centerOfMass - dict[RagdollJoint.Pelvis].centerOfMass) / deltaTime;
         }
 
         _animatorRef.speed = 1f;
@@ -99,6 +114,26 @@ public class TrainingArea : MonoBehaviour
                 0,
                 gap * (-1 - j)
             ), Quaternion.identity, transform);
+    }
+
+    public Vector3 GetCenterOfMass(IEnumerable<Rigidbody> rigidbodies)
+    {
+        var mass = 0f;
+        var centerOfMass = Vector3.zero;
+
+        foreach (var rb in rigidbodies)
+        {
+            rb.ResetCenterOfMass();
+
+            mass += rb.mass;
+            centerOfMass += (rb.transform.position - mannequinRef.transform.position + rb.centerOfMass) * rb.mass;
+        }
+
+        centerOfMass /= mass;
+
+        Assert.IsFalse(float.IsNaN(centerOfMass.sqrMagnitude), "float.IsNaN(centerOfMass.sqrMagnitude)");
+
+        return centerOfMass;
     }
 
     public int GetNextFrame(int frame)
@@ -130,7 +165,7 @@ public class TrainingArea : MonoBehaviour
     {
         var q = to * Quaternion.Inverse(from);
 
-        if (Mathf.Abs(q.w) > 1023.5f / 1024.0f)
+        if (Mathf.Abs(q.w) > 0.999999f)
             return new Vector3(0, 0, 0);
 
         float gain;

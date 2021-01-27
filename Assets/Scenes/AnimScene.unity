@@ -323,7 +323,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!81 &854384447
 AudioListener:
   m_ObjectHideFlags: 0
@@ -496,7 +496,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1634859588
 Transform:
   m_ObjectHideFlags: 0
@@ -521,6 +521,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -8789522655144303097, guid: 4d98cf8e6286f05489639915e7ce8e54,
+        type: 3}
+      propertyPath: animationClip
+      value: 
+      objectReference: {fileID: 7400000, guid: 6b33b7af0b72b0941b10dc3d7f9c7103, type: 2}
     - target: {fileID: 558687143920737096, guid: 4d98cf8e6286f05489639915e7ce8e54,
         type: 3}
       propertyPath: m_ConnectedAnchor.x
