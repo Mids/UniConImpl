@@ -206,7 +206,7 @@ public class MannequinAgent : Agent
         _prevCenterOfMass = _ragdoll.GetCenterOfMass();
         if (float.IsNaN(comReward))
         {
-            print($"NaN");
+            print($"MannequinAgent's comReward: NaN");
             return;
         }
 
