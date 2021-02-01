@@ -51,7 +51,7 @@ public class TrainingArea : MonoBehaviour
         _animatorRef = mannequinRef.GetComponentInChildren<Animator>();
         _animatorRef.speed = 0f;
         _rigidbody = mannequinRef.GetComponentsInChildren<Rigidbody>();
-        animationLength = _animatorRef.GetCurrentAnimatorClipInfo(0)[0].clip.length;
+        animationLength = animationClip.length;
 
         var refTransforms = _animatorRef.GetComponentsInChildren<Transform>();
 
@@ -104,8 +104,11 @@ public class TrainingArea : MonoBehaviour
         }
 
         _animatorRef.speed = 1f;
-
-        int size = 4;
+#if UNITY_EDITOR
+        int size = 1;
+#else
+        int size = 5;
+#endif
         int gap = 3;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)

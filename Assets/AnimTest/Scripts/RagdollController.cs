@@ -119,7 +119,7 @@ public class RagdollController : MonoBehaviour
     {
         if (!RagdollDataDict.ContainsKey(joint)) return;
 
-        RagdollDataDict[joint].RigidbodyComp.AddTorque(force);
+        RagdollDataDict[joint].RigidbodyComp.AddTorque(force, ForceMode.Impulse);
     }
 
     public Vector3 GetCenterOfMass()

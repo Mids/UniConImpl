@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.MLAgents;
@@ -7,6 +8,7 @@ using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(BehaviorParameters))]
 public class MannequinAgent : Agent
@@ -59,17 +61,17 @@ public class MannequinAgent : Agent
          * LeftElbow, // X
          * RightArm, // X, Y
          * RightElbow, // X
-         * MiddleSpine, // X, Y
-         * Head, // X, Y
-         * 2+1+2+1+2+1+2+1+2+2 = 16
+         * 2+1+2+1+2+1+2+1 = 12
          */
         var actionsArray = actions.ContinuousActions.Array;
 
         // print("actionReceived");
 
-        Assert.IsTrue(actionsArray.Length == 16);
+        Assert.IsTrue(actionsArray.Length == 12);
 
-        for (var i = 0; i < actionsArray.Length; i++) actionsArray[i] *= 100;
+        for (var i = 0; i < actionsArray.Length; i++) actionsArray[i] *= 10;
+        
+        // print($"LeftKnee: {actionsArray[2]}");
 
         _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
         _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
@@ -79,8 +81,8 @@ public class MannequinAgent : Agent
         _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], 0f, 0f);
         _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], 0f);
         _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], 0f, 0f);
-        _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
-        _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
+        // _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
+        // _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
         
         _episodeTime += Time.fixedDeltaTime;
         CalculateReward();
@@ -88,13 +90,18 @@ public class MannequinAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
+        for (var index = 0; index < actionsOut.ContinuousActions.Array.Length; index++)
+        {
+            actionsOut.ContinuousActions.Array[index] = Random.Range(-0.1f, 0.1f);
+        }
     }
 
     public override void OnEpisodeBegin()
     {
         _episodeTime = 0f;
-        _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
-                    * _trainingArea.animationLength;
+        // _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
+        //             * _trainingArea.animationLength;
+        _initTime = 0;
         _isStarted = false;
         _earlyTerminationStack = 0;
         _currentFrame = -1;
@@ -112,6 +119,14 @@ public class MannequinAgent : Agent
         }
 
         _prevCenterOfMass = _trainingArea.GetTransformData(_initTime, RagdollJoint.Pelvis).centerOfMass;
+
+        StartCoroutine(WaitForStart());
+    }
+
+    private IEnumerator WaitForStart()
+    {
+        yield return new WaitForFixedUpdate();
+        _isStarted = true;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -175,7 +190,6 @@ public class MannequinAgent : Agent
     {
         if (!_isStarted)
         {
-            _isStarted = true;
             return;
         }
         
@@ -201,6 +215,8 @@ public class MannequinAgent : Agent
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.localRotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
+        // Debug.DrawLine(transform.position, transform.position + _ragdoll.GetCenterOfMass(), Color.cyan, 0.1f);
+        // Debug.DrawLine(transform.position, transform.position + targetRoot.centerOfMass, Color.blue, 0.1f);
         var comVelocity = (_ragdoll.GetCenterOfMass() - _prevCenterOfMass) / Time.fixedDeltaTime;
         var comReward = (comVelocity - targetRoot.comVelocity).sqrMagnitude;
         _prevCenterOfMass = _ragdoll.GetCenterOfMass();
@@ -228,12 +244,14 @@ public class MannequinAgent : Agent
             var jointPosReward = posDiff.sqrMagnitude / 5;
             posReward += jointPosReward;
 
+
             var rotDiff = Quaternion.Angle(data.GetRotation(), root.GetRotation()) -
                           Quaternion.Angle(targetData.rotation, targetRoot.rotation);
             var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
             jointRotReward *= jointRotReward / 5;
             rotReward += jointRotReward;
 
+            
             // var jointAngVelReward = (data.GetAngularVelocity() - targetData.angularVelocity).magnitude / 5000;
             // if (jointAngVelReward > 0.01f) _isTerminated = true;
             // AddReward(0.01f - jointAngVelReward);
@@ -248,8 +266,8 @@ public class MannequinAgent : Agent
         if (rotReward < 0.3) _isTerminated = true;
 
         comReward = Mathf.Exp(-20 * comReward);
-        // if (comReward < 0.3) _isTerminated = true;
-        AddReward((posReward + rotReward + comReward)/3 - 0.3f);
+        // if (comReward < 0.1) _isTerminated = true;
+        AddReward((posReward + rotReward + comReward)/3 - 0.2f);
         
         // print($"Total reward: {posReward} + {rotReward} + {comReward} = {posReward + rotReward + comReward}");
 
@@ -269,10 +287,10 @@ public class MannequinAgent : Agent
     {
         if (++_earlyTerminationStack < EarlyTerminationMax) return;
 
-        var timeRatio = _episodeTime / _trainingArea.animationLength;
-        timeRatio *= timeRatio;
-        
-        AddReward(-5f + 10 * timeRatio);
+        // var timeRatio = _episodeTime / _trainingArea.animationLength;
+        // timeRatio *= timeRatio;
+        //
+        // AddReward(-5f + 10 * timeRatio);
         EndEpisode();
     }
     
