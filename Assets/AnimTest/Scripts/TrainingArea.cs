@@ -42,7 +42,7 @@ public class TrainingArea : MonoBehaviour
     public List<Dictionary<RagdollJoint, TransformData>> RefList = new List<Dictionary<RagdollJoint, TransformData>>();
 
     private float passedTime = 0f;
-    public const float deltaTime = 0.1f;
+    public const float deltaTime = 0.017f;
 
 
     // Start is called before the first frame update
@@ -105,7 +105,7 @@ public class TrainingArea : MonoBehaviour
 
         _animatorRef.speed = 1f;
 #if UNITY_EDITOR
-        int size = 1;
+        int size = 4;
 #else
         int size = 5;
 #endif

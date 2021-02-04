@@ -525,7 +525,7 @@ PrefabInstance:
         type: 3}
       propertyPath: animationClip
       value: 
-      objectReference: {fileID: 7400000, guid: 6b33b7af0b72b0941b10dc3d7f9c7103, type: 2}
+      objectReference: {fileID: 7400000, guid: 1c99dffa3d81b934da09743c0b263552, type: 2}
     - target: {fileID: 558687143920737096, guid: 4d98cf8e6286f05489639915e7ce8e54,
         type: 3}
       propertyPath: m_ConnectedAnchor.x

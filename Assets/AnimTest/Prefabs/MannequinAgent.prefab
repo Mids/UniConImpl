@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2131307483531801605}
-  - component: {fileID: 1456382824199327999}
   - component: {fileID: 5197576342811235142}
+  - component: {fileID: 1456382824199327999}
   - component: {fileID: 6910611179954499938}
   - component: {fileID: 2592766884044129994}
   m_Layer: 0
@@ -37,18 +37,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1456382824199327999
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 182662949724620614}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a310df83318a20c43aefe750978e0117, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5197576342811235142
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,7 +55,7 @@ MonoBehaviour:
     VectorActionSize: 0c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: cffbaa15385af26429f265bf4266424c, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 34735b433bf115c48a665d754882b549, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -75,6 +63,18 @@ MonoBehaviour:
   m_UseChildSensors: 1
   m_UseChildActuators: 1
   m_ObservableAttributeHandling: 0
+--- !u!114 &1456382824199327999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 182662949724620614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a310df83318a20c43aefe750978e0117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &6910611179954499938
 MonoBehaviour:
   m_ObjectHideFlags: 0
