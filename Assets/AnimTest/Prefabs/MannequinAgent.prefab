@@ -55,7 +55,7 @@ MonoBehaviour:
     VectorActionSize: 0c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 34735b433bf115c48a665d754882b549, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: e9cbd0fa109a59e48bfc0f063376dbf6, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -130,7 +130,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6762870662425306116
 RectTransform:
   m_ObjectHideFlags: 0

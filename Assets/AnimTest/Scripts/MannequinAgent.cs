@@ -26,6 +26,7 @@ public class MannequinAgent : Agent
     private int _earlyTerminationStack = 0;
     private const int EarlyTerminationMax = 1;
     private int _currentFrame = -1;
+    private float _lastReward = 0;
 
     private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
 
@@ -79,7 +80,7 @@ public class MannequinAgent : Agent
         forcePenalty /= actionsArray.Length;
 
 #if UNITY_EDITOR
-        print($"LeftKnee: {actionsArray[2]}");
+        // print($"LeftKnee: {actionsArray[2]}");
 
         // actionsArray[2] = -0.2f;
         // actionsArray[5] = -0.2f;
@@ -101,6 +102,9 @@ public class MannequinAgent : Agent
         SetReward(0);
         AddTargetStateReward();
         AddReward((1f - forcePenalty) / 100);
+#if UNITY_EDITOR
+        ShowReward();
+#endif
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -112,12 +116,16 @@ public class MannequinAgent : Agent
     public override void OnEpisodeBegin()
     {
         _episodeTime = 0f;
+        // TODO: RSI
         // _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
         //             * _trainingArea.animationLength;
         _initTime = 0;
         _isStarted = false;
         _earlyTerminationStack = 0;
         _currentFrame = -1;
+#if UNITY_EDITOR
+        _lastReward = 0;
+#endif
 
         foreach (var kvp in _ragdoll.RagdollDataDict)
         {
@@ -269,19 +277,22 @@ public class MannequinAgent : Agent
 
         posReward = Mathf.Exp(-2 * posReward);
         rotReward = Mathf.Exp(-2 * rotReward);
-#if !UNITY_EDITOR
-        if (posReward < 0.3 || rotReward < 0.3)
-            _isTerminated = true;
-#endif
         // comReward = Mathf.Exp(-20 * comReward);
         // if (comReward < 0.1) _isTerminated = true;
         // var totalReward = (posReward + rotReward + comReward) / 3;
-        var totalReward = (posReward + rotReward) / 2;
+        var totalReward = (posReward + rotReward) / 1 - 1f;
+#if !UNITY_EDITOR
+        if (posReward < 0.3 || rotReward < 0.3)
+        {
+            _isTerminated = true;
+            totalReward = -1;
+        }
+#endif
         AddReward(totalReward);
 
         // print($"Total reward: {posReward} + {rotReward} + {comReward} = {posReward + rotReward + comReward}");
 
-        if (_episodeTime > _trainingArea.animationLength)
+        if (_episodeTime > _trainingArea.animationLength * 10)
         {
             _earlyTerminationStack = EarlyTerminationMax;
             _isTerminated = true;
@@ -301,8 +312,15 @@ public class MannequinAgent : Agent
         EndEpisode();
     }
 
+
     private void Update()
     {
-        cumulativeRewardText.text = GetCumulativeReward().ToString("0.00");
+    }
+
+    private void ShowReward()
+    {
+        var delta = GetCumulativeReward() - _lastReward;
+        cumulativeRewardText.text = delta.ToString("0.00");
+        _lastReward = GetCumulativeReward();
     }
 }

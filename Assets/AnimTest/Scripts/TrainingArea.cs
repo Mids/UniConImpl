@@ -105,11 +105,11 @@ public class TrainingArea : MonoBehaviour
 
         _animatorRef.speed = 1f;
 #if UNITY_EDITOR
-        int size = 4;
+        int size = 3;
 #else
         int size = 5;
 #endif
-        int gap = 3;
+        int gap = 4;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)
             Instantiate(mannequinAgentPrefab, new Vector3(
@@ -149,8 +149,8 @@ public class TrainingArea : MonoBehaviour
 
     public int GetFrame(float time)
     {
-        while (time > animationLength)
-            time -= animationLength;
+        if (time > animationLength)
+            time %= animationLength;
         return (int) (time / deltaTime);
     }
 
