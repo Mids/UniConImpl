@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using DataProcessor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -43,69 +43,17 @@ public class TrainingArea : MonoBehaviour
 
     private float passedTime = 0f;
     public const float deltaTime = 0.017f;
-
+    
+    public readonly Dictionary<string, MotionData> MotionDict = new Dictionary<string, MotionData>();
+    private Dictionary<string, AnimationClip> AnimDict;
 
     // Start is called before the first frame update
-    private IEnumerator Start()
+    private void Start()
     {
-        _animatorRef = mannequinRef.GetComponentInChildren<Animator>();
-        _animatorRef.speed = 0f;
-        _rigidbody = mannequinRef.GetComponentsInChildren<Rigidbody>();
-        animationLength = animationClip.length;
+        InitArea();
 
-        var refTransforms = _animatorRef.GetComponentsInChildren<Transform>();
-
-
-        while (passedTime < animationLength)
-        {
-            _animatorRef.Play(animationClip.name, 0, passedTime / animationLength);
-
-            yield return new WaitForEndOfFrame();
-
-            var newDict = new Dictionary<RagdollJoint, TransformData>();
-
-            foreach (var kvp in RagdollData.RagdollJointNames)
-            {
-                var t = refTransforms.FirstOrDefault(p => p.name.Contains(kvp.Value));
-                if (t == default) continue;
-
-                newDict[kvp.Key] = new TransformData(t);
-            }
-
-            newDict[RagdollJoint.Pelvis].centerOfMass = GetCenterOfMass(_rigidbody);
-
-            RefList.Add(newDict);
-
-            passedTime += deltaTime;
-        }
-
-        print($"Total frame: {RefList.Count}");
-
-        for (var index = 0; index < RefList.Count; index++)
-        {
-            var nextIndex = index + 1;
-            if (nextIndex == RefList.Count) nextIndex = 0;
-
-            var dict = RefList[index];
-            var nextDict = RefList[nextIndex];
-
-            foreach (var kvp in dict)
-            {
-                var joint = kvp.Key;
-                var data = kvp.Value;
-                var nextData = nextDict[joint];
-
-                data.velocity = (nextData.position - data.position) / deltaTime;
-                data.angularVelocity = GetAngularVelocity(data.rotation, nextData.rotation);
-            }
-
-            dict[RagdollJoint.Pelvis].comVelocity =
-                (nextDict[RagdollJoint.Pelvis].centerOfMass - dict[RagdollJoint.Pelvis].centerOfMass) / deltaTime;
-        }
-
-        _animatorRef.speed = 1f;
 #if UNITY_EDITOR
-        int size = 3;
+        int size = 1;
 #else
         int size = 5;
 #endif
@@ -117,6 +65,45 @@ public class TrainingArea : MonoBehaviour
                 0,
                 gap * (-1 - j)
             ), Quaternion.identity, transform);
+    }
+
+    public void InitArea()
+    {
+        GetAllMotionTXT("Motions");
+        GetAllAnimClips("MannequinAnimation");
+    }
+
+    private void GetAllMotionTXT(string dirPath)
+    {
+        var infos = Resources.LoadAll<TextAsset>(dirPath);
+        foreach (var textAsset in infos)
+        {
+            if (textAsset == default) continue;
+
+            var motionData = AnimationImporter.Import(textAsset);
+            MotionDict[textAsset.name] = motionData;
+        }
+    }
+
+    private void GetAllAnimClips(string dirPath)
+    {
+        AnimDict = Resources.LoadAll<AnimationClip>(dirPath)
+            .Where(p => MotionDict.ContainsKey(p.name))
+            .ToDictionary(p => p.name);
+
+        Assert.IsTrue(AnimDict.Count == MotionDict.Count,
+            $"{MotionDict.Count - AnimDict.Count} Animation Clips are lost");
+    }
+
+    public KeyValuePair<string, MotionData> GetRandomMotion()
+    {
+        var idx = Random.Range(0, MotionDict.Count);
+        return MotionDict.ElementAt(idx);
+    }
+
+    public AnimationClip GetAnimationClip(string key)
+    {
+        return AnimDict[key];
     }
 
     public Vector3 GetCenterOfMass(IEnumerable<Rigidbody> rigidbodies)
@@ -137,52 +124,5 @@ public class TrainingArea : MonoBehaviour
         Assert.IsFalse(float.IsNaN(centerOfMass.sqrMagnitude), "float.IsNaN(centerOfMass.sqrMagnitude)");
 
         return centerOfMass;
-    }
-
-    public int GetNextFrame(int frame)
-    {
-        var nextFrame = frame + 1;
-        if (nextFrame >= RefList.Count)
-            nextFrame = 0;
-        return nextFrame;
-    }
-
-    public int GetFrame(float time)
-    {
-        if (time > animationLength)
-            time %= animationLength;
-        return (int) (time / deltaTime);
-    }
-
-    public TransformData GetTransformData(float time, RagdollJoint joint)
-    {
-        return GetTransformData(GetFrame(time), joint);
-    }
-
-    public TransformData GetTransformData(int frame, RagdollJoint joint)
-    {
-        return RefList[frame][joint];
-    }
-
-    internal static Vector3 GetAngularVelocity(Quaternion from, Quaternion to)
-    {
-        var q = to * Quaternion.Inverse(from);
-
-        if (Mathf.Abs(q.w) > 0.999999f)
-            return new Vector3(0, 0, 0);
-
-        float gain;
-        if (q.w < 0.0f)
-        {
-            var angle = Mathf.Acos(-q.w);
-            gain = -2.0f * angle / (Mathf.Sin(angle) * deltaTime);
-        }
-        else
-        {
-            var angle = Mathf.Acos(q.w);
-            gain = 2.0f * angle / (Mathf.Sin(angle) * deltaTime);
-        }
-
-        return new Vector3(q.x * gain, q.y * gain, q.z * gain);
     }
 }

@@ -84,6 +84,7 @@ public class RagdollData
 
 public class RagdollController : MonoBehaviour
 {
+    public GameObject agentMesh;
     public readonly Dictionary<RagdollJoint, RagdollData> RagdollDataDict =
         new Dictionary<RagdollJoint, RagdollData>();
 
@@ -95,7 +96,7 @@ public class RagdollController : MonoBehaviour
 
         var ragdollDatas = RagdollDataDict.Values.ToArray();
 
-        var transforms = GetComponentsInChildren<Transform>();
+        var transforms = agentMesh.GetComponentsInChildren<Transform>();
 
         foreach (var t in transforms)
         {
