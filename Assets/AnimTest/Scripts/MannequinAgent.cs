@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DataProcessor;
 using TMPro;
 using Unity.MLAgents;
@@ -29,12 +30,8 @@ public class MannequinAgent : Agent
     private int _currentFrame = -1;
     private float _lastReward = 0;
 
-    private Queue<Dictionary<RagdollJoint, Vector3>> _refPositions = new Queue<Dictionary<RagdollJoint, Vector3>>();
-
-    private Queue<Dictionary<RagdollJoint, Quaternion>> _refRotations =
-        new Queue<Dictionary<RagdollJoint, Quaternion>>();
-
     public int targetStatesLength = 3;
+    private static readonly int[] FrameOffset = {1, 4, 16};
 
 
     public float rewardRootPos = 0.2f;
@@ -56,11 +53,15 @@ public class MannequinAgent : Agent
     public AnimatorOverrideController tOverrideController;
     public Dictionary<string, Transform> RefTransformDict = new Dictionary<string, Transform>();
 
+
+    // private StreamWriter sw;
+
     public override void Initialize()
     {
         base.Initialize();
         _trainingArea = GetComponentInParent<TrainingArea>();
         _ragdoll = GetComponent<RagdollController>();
+        // sw = new StreamWriter("reward.txt");
 
         var refTransforms = RefAnimator.GetComponentsInChildren<Transform>();
         foreach (var refTransform in refTransforms) RefTransformDict[refTransform.name] = refTransform;
@@ -81,25 +82,18 @@ public class MannequinAgent : Agent
          */
         var actionsArray = actions.ContinuousActions.Array;
 
-        // print("actionReceived");
-
         Assert.IsTrue(actionsArray.Length == 12);
 
         var forcePenalty = 0f;
         for (var i = 0; i < actionsArray.Length; i++)
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
-            actionsArray[i] *= 5;
+            actionsArray[i] *= 4;
         }
 
+        // print($"left hip : {actionsArray[0]}");
+
         forcePenalty /= actionsArray.Length;
-
-#if UNITY_EDITOR
-        // print($"LeftKnee: {actionsArray[2]}");
-
-        // actionsArray[2] = -0.2f;
-        // actionsArray[5] = -0.2f;
-#endif
 
         _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
         _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
@@ -116,10 +110,15 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        AddReward((1f - forcePenalty) / 100);
+        AddReward((1f - forcePenalty) / 1000);
 #if UNITY_EDITOR
         ShowReward();
 #endif
+    }
+
+    private void OnDestroy()
+    {
+        // sw.Close();
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -142,6 +141,8 @@ public class MannequinAgent : Agent
         _lastReward = 0;
 #endif
 
+        // sw.WriteLine("\n");
+
         var motionPair = _trainingArea.GetRandomMotion();
         var motionKey = motionPair.Key;
 
@@ -150,6 +151,12 @@ public class MannequinAgent : Agent
 
         ResetRefPose(animClip, _initTime);
         CopyRefPose();
+
+        foreach (var ragdollData in _ragdoll.RagdollDataDict.Select(kvp => kvp.Value))
+        {
+            ragdollData.RigidbodyComp.velocity = Vector3.zero;
+            ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
+        }
 
         StartCoroutine(WaitForStart());
     }
@@ -221,10 +228,11 @@ public class MannequinAgent : Agent
         // Time to next frame (1)
         sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
 
+        ;
         // Target State (5*13) * 3 = 195
         for (var i = 0; i < targetStatesLength; ++i)
         {
-            var targetPose = _currentMotion.GetPose(currentFrame + i + 1);
+            var targetPose = _currentMotion.GetPose(currentFrame + FrameOffset[i]);
 
             foreach (var bone in SkeletonData.allBones)
             {
@@ -235,6 +243,8 @@ public class MannequinAgent : Agent
             }
         }
     }
+
+
 
     public void AddTargetStateReward()
     {
@@ -261,6 +271,10 @@ public class MannequinAgent : Agent
 
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
+
+        var velReward = (root.GetVelocity() - targetRoot.Velocity).sqrMagnitude;
+
+        var avReward = (root.GetAngularVelocity() - targetRoot.AngularVelocity).sqrMagnitude;
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
@@ -290,13 +304,21 @@ public class MannequinAgent : Agent
 
             var posDiff = rootInv * (data.GetPosition() - root.GetPosition()) - targetData.Position;
             var jointPosReward = posDiff.sqrMagnitude;
-            posReward += jointPosReward / 20;
+            posReward += jointPosReward / 8;
 
 
             var rotDiff = Quaternion.Angle(rootInv * data.GetRotation(), targetData.Rotation);
             var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
             jointRotReward *= jointRotReward;
-            rotReward += jointRotReward / 20;
+            rotReward += jointRotReward / 2;
+
+            var velDiff = rootInv * (data.GetVelocity() - root.GetVelocity()) - targetData.Velocity;
+            var jointVelReward = velDiff.sqrMagnitude;
+            velReward += jointVelReward / 8;
+
+            var avDiff = data.GetAngularVelocity() - root.GetAngularVelocity() - targetData.AngularVelocity;
+            var jointAvReward = avDiff.sqrMagnitude;
+            avReward += jointAvReward / 2;
 
 
             // var jointAngVelReward = (data.GetAngularVelocity() - targetData.angularVelocity).magnitude / 5000;
@@ -306,14 +328,16 @@ public class MannequinAgent : Agent
             // print($"{joint} posReward: {jointPosReward}, rotReward: {jointRotReward}");
         }
 
+        // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
+
         posReward = Mathf.Exp(-2 * posReward);
-        rotReward = Mathf.Exp(-2 * rotReward);
-        // comReward = Mathf.Exp(-20 * comReward);
-        // if (comReward < 0.1) _isTerminated = true;
-        // var totalReward = (posReward + rotReward + comReward) / 3;
-        var totalReward = (posReward + rotReward) / 1 - 1f;
+        rotReward = Mathf.Exp(rotReward / -2);
+        velReward = Mathf.Exp(velReward / -2);
+        avReward = Mathf.Exp(avReward / -100);
+
+        var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
 // #if !UNITY_EDITOR
-        if (posReward < 0.1 || rotReward < 0.1)
+        if (posReward < 0.2)
         {
             _isTerminated = true;
             totalReward = -1;
@@ -323,7 +347,7 @@ public class MannequinAgent : Agent
         AddReward(totalReward);
 
 #if UNITY_EDITOR
-        print($"Total reward: {posReward} + {rotReward} = {posReward + rotReward}");
+        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}");
 #endif
 
         if (animationTime > animClip.length)
@@ -340,11 +364,6 @@ public class MannequinAgent : Agent
         if (++_earlyTerminationStack < EarlyTerminationMax) return;
 
         EndEpisode();
-    }
-
-
-    private void Update()
-    {
     }
 
     private void ShowReward()

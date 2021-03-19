@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182662949724620614}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3972060675201483795}
@@ -56,7 +56,7 @@ MonoBehaviour:
     VectorActionSize: 0c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 0}
+  m_Model: {fileID: 5022602860645237092, guid: 3f945bd0156c9cc49b9dfde0ba85cd4a, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -476,6 +476,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2131307483531801605}
     m_Modifications:
+    - target: {fileID: 3968329190181527408, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_LowTwistLimit.limit
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968329190181527408, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_HighTwistLimit.limit
+      value: 150
+      objectReference: {fileID: 0}
     - target: {fileID: 7021746623606918378, guid: c159fa56c6012d844bdb9e4d451adcd1,
         type: 3}
       propertyPath: m_LocalPosition.x

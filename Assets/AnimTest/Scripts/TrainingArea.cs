@@ -4,46 +4,13 @@ using DataProcessor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-public class TransformData
-{
-    public Vector3 position;
-    public Quaternion rotation;
-    public Vector3 localPosition;
-    public Quaternion localRotation;
-    public Vector3 velocity;
-    public Vector3 angularVelocity;
-    public Vector3 centerOfMass;
-    public Vector3 comVelocity;
-
-    public TransformData(Transform t)
-    {
-        position = t.position;
-        rotation = t.rotation;
-        localPosition = t.localPosition;
-        localRotation = t.localRotation;
-    }
-}
-
 public class TrainingArea : MonoBehaviour
 {
     public MannequinAgent mannequinAgentPrefab;
     public GameObject mannequinRef;
 
-    [HideInInspector]
-    public Animator _animatorRef;
-
     private Rigidbody[] _rigidbody;
-    public float animationLength;
 
-    public AnimationClip animationClip;
-
-    private static readonly int Reset = Animator.StringToHash("Reset");
-
-    public List<Dictionary<RagdollJoint, TransformData>> RefList = new List<Dictionary<RagdollJoint, TransformData>>();
-
-    private float passedTime = 0f;
-    public const float deltaTime = 0.017f;
-    
     public readonly Dictionary<string, MotionData> MotionDict = new Dictionary<string, MotionData>();
     private Dictionary<string, AnimationClip> AnimDict;
 
@@ -104,25 +71,5 @@ public class TrainingArea : MonoBehaviour
     public AnimationClip GetAnimationClip(string key)
     {
         return AnimDict[key];
-    }
-
-    public Vector3 GetCenterOfMass(IEnumerable<Rigidbody> rigidbodies)
-    {
-        var mass = 0f;
-        var centerOfMass = Vector3.zero;
-
-        foreach (var rb in rigidbodies)
-        {
-            rb.ResetCenterOfMass();
-
-            mass += rb.mass;
-            centerOfMass += (rb.transform.position - mannequinRef.transform.position + rb.centerOfMass) * rb.mass;
-        }
-
-        centerOfMass /= mass;
-
-        Assert.IsFalse(float.IsNaN(centerOfMass.sqrMagnitude), "float.IsNaN(centerOfMass.sqrMagnitude)");
-
-        return centerOfMass;
     }
 }
