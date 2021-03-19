@@ -69,6 +69,7 @@ public class MannequinAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
+        if(!_isStarted) return;
         /***
          * LeftHips, // X, Y
          * LeftKnee, // X
@@ -130,9 +131,6 @@ public class MannequinAgent : Agent
     public override void OnEpisodeBegin()
     {
         _episodeTime = 0f;
-        // TODO: RSI
-        // _initTime = _trainingArea._animatorRef.GetCurrentAnimatorStateInfo(0).normalizedTime % 1
-        //             * _trainingArea.animationLength;
         _initTime = 0;
         _isStarted = false;
         _earlyTerminationStack = 0;
@@ -149,11 +147,16 @@ public class MannequinAgent : Agent
         animClip = _trainingArea.GetAnimationClip(motionKey);
         _currentMotion = motionPair.Value;
 
+        // RSI
+        _initTime = Random.Range(0f, animClip.length / 2);
+
         ResetRefPose(animClip, _initTime);
         CopyRefPose();
 
         foreach (var ragdollData in _ragdoll.RagdollDataDict.Select(kvp => kvp.Value))
         {
+            ragdollData.RigidbodyComp.position = ragdollData.GetPosition();
+            ragdollData.RigidbodyComp.rotation = ragdollData.GetRotation();
             ragdollData.RigidbodyComp.velocity = Vector3.zero;
             ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
         }
@@ -193,7 +196,7 @@ public class MannequinAgent : Agent
 
     private IEnumerator WaitForStart()
     {
-        yield return new WaitForFixedUpdate();
+        yield return new WaitForEndOfFrame();
         _isStarted = true;
     }
 
@@ -243,7 +246,6 @@ public class MannequinAgent : Agent
             }
         }
     }
-
 
 
     public void AddTargetStateReward()
@@ -363,6 +365,7 @@ public class MannequinAgent : Agent
     {
         if (++_earlyTerminationStack < EarlyTerminationMax) return;
 
+        _isStarted = false;
         EndEpisode();
     }
 
