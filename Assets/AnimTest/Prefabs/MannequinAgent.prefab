@@ -56,7 +56,7 @@ MonoBehaviour:
     VectorActionSize: 0c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 12d345f8dc573c04aaf63f9f4e71e804, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: c69e66fa73fad3d49ae9c72572e3fbf5, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -105,6 +105,7 @@ MonoBehaviour:
   fps: 30
   RefAnimator: {fileID: 856127322940407488}
   tOverrideController: {fileID: 0}
+  power: 0
 --- !u!114 &2592766884044129994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -476,6 +477,41 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2131307483531801605}
     m_Modifications:
+    - target: {fileID: 782617370122910711, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Height
+      value: 0.42866495
+      objectReference: {fileID: 0}
+    - target: {fileID: 782617370122910711, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.23163027
+      objectReference: {fileID: 0}
+    - target: {fileID: 782617370122910711, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.002507947
+      objectReference: {fileID: 0}
+    - target: {fileID: 1616671817602118052, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Height
+      value: 0.42866495
+      objectReference: {fileID: 0}
+    - target: {fileID: 1616671817602118052, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.23163027
+      objectReference: {fileID: 0}
+    - target: {fileID: 1616671817602118052, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0.008340292
+      objectReference: {fileID: 0}
+    - target: {fileID: 1616671817602118052, guid: c159fa56c6012d844bdb9e4d451adcd1,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.002507947
+      objectReference: {fileID: 0}
     - target: {fileID: 3968329190181527408, guid: c159fa56c6012d844bdb9e4d451adcd1,
         type: 3}
       propertyPath: m_LowTwistLimit.limit

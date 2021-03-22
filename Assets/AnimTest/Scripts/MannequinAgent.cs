@@ -29,6 +29,7 @@ public class MannequinAgent : Agent
     private const int EarlyTerminationMax = 1;
     private int _currentFrame = -1;
     private float _lastReward = 0;
+    private bool _isRewarded = false;
 
     public int targetStatesLength = 3;
     private static readonly int[] FrameOffset = {1, 4, 16};
@@ -68,9 +69,10 @@ public class MannequinAgent : Agent
     }
 
     public float power;
+
     public override void OnActionReceived(ActionBuffers actions)
     {
-        if(!_isStarted) return;
+        if (!_isStarted) return;
         /***
          * LeftHips, // X, Y
          * LeftKnee, // X
@@ -286,6 +288,10 @@ public class MannequinAgent : Agent
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
+        var totalJointPosReward = 0f;
+        var totalJointRotReward = 0f;
+        var totalJointVelReward = 0f;
+        var totalJointAvReward = 0f;
         foreach (RagdollJoint joint in joints)
         {
             HumanBodyBones bone;
@@ -312,38 +318,44 @@ public class MannequinAgent : Agent
 
             var posDiff = rootInv * (data.GetPosition() - root.GetPosition()) - targetData.Position;
             var jointPosReward = posDiff.sqrMagnitude;
-            posReward += jointPosReward / 8;
+            totalJointPosReward += jointPosReward / 8;
 
 
             var rotDiff = Quaternion.Angle(rootInv * data.GetRotation(), targetData.Rotation);
             var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
             jointRotReward *= jointRotReward;
-            rotReward += jointRotReward / 2;
+            totalJointRotReward += jointRotReward / 2;
 
             var velDiff = rootInv * (data.GetVelocity() - root.GetVelocity()) - targetData.Velocity;
             var jointVelReward = velDiff.sqrMagnitude;
-            velReward += jointVelReward / 8;
+            totalJointVelReward += jointVelReward / 8;
 
             var avDiff = data.GetAngularVelocity() - root.GetAngularVelocity() - targetData.AngularVelocity;
             var jointAvReward = avDiff.sqrMagnitude;
-            avReward += jointAvReward / 2;
-
-
-            // var jointAngVelReward = (data.GetAngularVelocity() - targetData.angularVelocity).magnitude / 5000;
-            // if (jointAngVelReward > 0.01f) _isTerminated = true;
-            // AddReward(0.01f - jointAngVelReward);
-
-            // print($"{joint} posReward: {jointPosReward}, rotReward: {jointRotReward}");
+            totalJointAvReward += jointAvReward / 2;
         }
 
+#if UNITY_EDITOR
+        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n" +
+        //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
+#endif
+
         // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
+
+        posReward += totalJointPosReward / 10f;
+        rotReward += totalJointRotReward / 10f;
+        velReward += totalJointVelReward / 10f;
+        avReward += totalJointAvReward / 10f;
+        
+        
 
         posReward = Mathf.Exp(-2 * posReward);
         rotReward = Mathf.Exp(rotReward / -2);
         velReward = Mathf.Exp(velReward / -2);
         avReward = Mathf.Exp(avReward / -100);
 
-        var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
+        // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
+        var totalReward = (posReward + rotReward + velReward) / 1.5f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2)
         {
@@ -352,11 +364,8 @@ public class MannequinAgent : Agent
         }
 
 // #endif
+        _isRewarded = true;
         AddReward(totalReward);
-
-#if UNITY_EDITOR
-        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}");
-#endif
 
         if (animationTime > animClip.length)
         {
@@ -377,6 +386,8 @@ public class MannequinAgent : Agent
 
     private void ShowReward()
     {
+        if (!_isRewarded) return;
+        _isRewarded = false;
         var delta = GetCumulativeReward() - _lastReward;
         cumulativeRewardText.text = delta.ToString("0.00");
         _lastReward = GetCumulativeReward();
