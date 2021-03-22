@@ -67,6 +67,7 @@ public class MannequinAgent : Agent
         foreach (var refTransform in refTransforms) RefTransformDict[refTransform.name] = refTransform;
     }
 
+    public float power;
     public override void OnActionReceived(ActionBuffers actions)
     {
         if(!_isStarted) return;
@@ -92,6 +93,11 @@ public class MannequinAgent : Agent
             actionsArray[i] *= 10;
         }
 
+        // if (power != 0)
+        // {
+        //     actionsArray[2] = power;
+        //     actionsArray[5] = power;
+        // }
         // print($"right knee : {actionsArray[5]}");
 
         forcePenalty /= actionsArray.Length;
