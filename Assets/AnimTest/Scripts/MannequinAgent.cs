@@ -89,10 +89,10 @@ public class MannequinAgent : Agent
         for (var i = 0; i < actionsArray.Length; i++)
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
-            actionsArray[i] *= 4;
+            actionsArray[i] *= 10;
         }
 
-        // print($"left hip : {actionsArray[0]}");
+        // print($"right knee : {actionsArray[5]}");
 
         forcePenalty /= actionsArray.Length;
 
@@ -349,7 +349,7 @@ public class MannequinAgent : Agent
         AddReward(totalReward);
 
 #if UNITY_EDITOR
-        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}");
+        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}");
 #endif
 
         if (animationTime > animClip.length)
