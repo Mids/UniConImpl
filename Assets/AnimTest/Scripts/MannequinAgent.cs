@@ -232,8 +232,8 @@ public class MannequinAgent : Agent
             var data = _ragdoll.RagdollDataDict[joint];
             sensor.AddObservation(rootInv * (data.GetPosition() - root.GetPosition()));
             sensor.AddObservation(rootInv * data.GetRotation());
-            sensor.AddObservation(data.GetVelocity());
-            sensor.AddObservation(data.GetAngularVelocity());
+            sensor.AddObservation(data.GetVelocity() - root.GetVelocity());
+            sensor.AddObservation(data.GetAngularVelocity() - root.GetAngularVelocity());
         }
 
         // Time to next frame (1)
