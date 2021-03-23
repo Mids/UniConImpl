@@ -262,7 +262,7 @@ public class MannequinAgent : Agent
         var animationTime = _initTime + _episodeTime;
         var curFrame = (int) (animationTime * 30f);
         var targetPose = _currentMotion.GetPose(curFrame);
-        if (_currentFrame == curFrame) return;
+        // if (_currentFrame == curFrame) return;
 
         _currentFrame = curFrame;
 
