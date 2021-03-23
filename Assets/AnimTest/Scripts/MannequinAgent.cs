@@ -238,8 +238,7 @@ public class MannequinAgent : Agent
 
         // Time to next frame (1)
         sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
-
-        ;
+        
         // Target State (5*13) * 3 = 195
         for (var i = 0; i < targetStatesLength; ++i)
         {
@@ -355,7 +354,7 @@ public class MannequinAgent : Agent
         avReward = Mathf.Exp(avReward / -100);
 
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward) / 3f;
+        var totalReward = (posReward + rotReward) / 1f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2)
         {
