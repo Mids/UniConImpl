@@ -332,6 +332,9 @@ public class MannequinAgent : Agent
             var avDiff = data.GetAngularVelocity() - root.GetAngularVelocity() - targetData.AngularVelocity;
             var jointAvReward = avDiff.sqrMagnitude;
             totalJointAvReward += jointAvReward / 2;
+            
+            
+            // print($"{joint} : {jointPosReward} / {jointRotReward}");
         }
 
 #if UNITY_EDITOR
@@ -341,12 +344,11 @@ public class MannequinAgent : Agent
 
         // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
 
-        posReward += totalJointPosReward / 10f;
-        rotReward += totalJointRotReward / 10f;
-        velReward += totalJointVelReward / 10f;
-        avReward += totalJointAvReward / 10f;
-        
-        
+        // posReward += totalJointPosReward / 10f;
+        // rotReward += totalJointRotReward / 10f;
+        // velReward += totalJointVelReward / 10f;
+        // avReward += totalJointAvReward / 10f;
+
 
         posReward = Mathf.Exp(-2 * posReward);
         rotReward = Mathf.Exp(rotReward / -2);
@@ -356,7 +358,7 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward) / 1f - 1f;
 // #if !UNITY_EDITOR
-        if (posReward < 0.2)
+        if (posReward < 0.2 || posReward < 0.2)
         {
             _isTerminated = true;
             totalReward = -1;
