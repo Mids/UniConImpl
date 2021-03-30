@@ -56,7 +56,7 @@ MonoBehaviour:
     VectorActionSize: 0c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: b0504c90b0f2b4d45b559fddb9f306b9, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest

@@ -86,7 +86,7 @@ public class MannequinAgent : Agent
          */
         var actionsArray = actions.ContinuousActions.Array;
 
-        Assert.IsTrue(actionsArray.Length == 12);
+        // Assert.IsTrue(actionsArray.Length == 12);
 
         var forcePenalty = 0f;
         for (var i = 0; i < actionsArray.Length; i++)
@@ -104,6 +104,10 @@ public class MannequinAgent : Agent
 
         forcePenalty /= actionsArray.Length;
 
+        // _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], actionsArray[12]); _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], actionsArray[20], actionsArray[13]);
+        // _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], actionsArray[14]); _ragdoll.AddTorque(RagdollJoint.RightKnee, actionsArray[5], actionsArray[21], actionsArray[15]);
+        // _ragdoll.AddTorque(RagdollJoint.LeftArm, actionsArray[6], actionsArray[7], actionsArray[16]); _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], actionsArray[22], actionsArray[17]);
+        // _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], actionsArray[18]); _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], actionsArray[23], actionsArray[19]);
         _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
         _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
         _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], 0f);
@@ -112,6 +116,7 @@ public class MannequinAgent : Agent
         _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], 0f, 0f);
         _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], 0f);
         _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], 0f, 0f);
+        
         // _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
         // _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
 
@@ -276,12 +281,16 @@ public class MannequinAgent : Agent
         var targetRoot = targetPose.Root;
         var rootInv = Quaternion.Inverse(root.GetLocalRotation());
 
-        var posReward = (root.GetLocalPosition() - targetRoot.Position).sqrMagnitude;
+        var posReward = (root.GetLocalPosition().y - targetRoot.Position.y);
+        posReward *= posReward;
+        // var posReward = (root.GetLocalPosition() - targetRoot.Position).sqrMagnitude;
 
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
-        var velReward = (root.GetVelocity() - targetRoot.Velocity).sqrMagnitude;
+        var velReward = (root.GetVelocity().y - targetRoot.Velocity.y);
+        velReward *= velReward;
+        // var velReward = (root.GetVelocity() - targetRoot.Velocity).sqrMagnitude;
 
         var avReward = (root.GetAngularVelocity() - targetRoot.AngularVelocity).sqrMagnitude;
 
@@ -344,19 +353,22 @@ public class MannequinAgent : Agent
 
         // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
 
-        // posReward += totalJointPosReward / 10f;
-        // rotReward += totalJointRotReward / 10f;
-        // velReward += totalJointVelReward / 10f;
-        // avReward += totalJointAvReward / 10f;
+        posReward += totalJointPosReward / 2f;
+        rotReward += totalJointRotReward / 10f;
+        velReward += totalJointVelReward / 10f;
+        avReward += totalJointAvReward / 10f;
 
 
-        posReward = Mathf.Exp(-2 * posReward);
+        posReward = Mathf.Exp(-6 * posReward);
         rotReward = Mathf.Exp(rotReward / -2);
-        velReward = Mathf.Exp(velReward / -2);
+        velReward = Mathf.Exp(velReward / -20);
         avReward = Mathf.Exp(avReward / -100);
 
+#if UNITY_EDITOR
+        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n");
+#endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward) / 1f - 1f;
+        var totalReward = (posReward + velReward) / 1f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2 || posReward < 0.2)
         {
