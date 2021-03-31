@@ -9,7 +9,6 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(BehaviorParameters))]
@@ -89,7 +88,8 @@ public class MannequinAgent : Agent
         // Assert.IsTrue(actionsArray.Length == 12);
 
         var forcePenalty = 0f;
-        for (var i = 0; i < actionsArray.Length; i++)
+        var actionsArrayLength = actionsArray.Length;
+        for (var i = 0; i < actionsArrayLength; i++)
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
             actionsArray[i] *= 10;
@@ -102,21 +102,29 @@ public class MannequinAgent : Agent
         // }
         // print($"right knee : {actionsArray[5]}");
 
-        forcePenalty /= actionsArray.Length;
-
-        // _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], actionsArray[12]); _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], actionsArray[20], actionsArray[13]);
-        // _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], actionsArray[14]); _ragdoll.AddTorque(RagdollJoint.RightKnee, actionsArray[5], actionsArray[21], actionsArray[15]);
-        // _ragdoll.AddTorque(RagdollJoint.LeftArm, actionsArray[6], actionsArray[7], actionsArray[16]); _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], actionsArray[22], actionsArray[17]);
-        // _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], actionsArray[18]); _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], actionsArray[23], actionsArray[19]);
-        _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
-        _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
-        _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], 0f);
-        _ragdoll.AddTorque(RagdollJoint.RightKnee, actionsArray[5], 0f, 0f);
-        _ragdoll.AddTorque(RagdollJoint.LeftArm, actionsArray[6], actionsArray[7], 0f);
-        _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], 0f, 0f);
-        _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], 0f);
-        _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], 0f, 0f);
-        
+        forcePenalty /= actionsArrayLength;
+        if (actionsArrayLength == 24)
+        {
+            _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], actionsArray[12]);
+            _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], actionsArray[20], actionsArray[13]);
+            _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], actionsArray[14]);
+            _ragdoll.AddTorque(RagdollJoint.RightKnee, actionsArray[5], actionsArray[21], actionsArray[15]);
+            _ragdoll.AddTorque(RagdollJoint.LeftArm, actionsArray[6], actionsArray[7], actionsArray[16]);
+            _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], actionsArray[22], actionsArray[17]);
+            _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], actionsArray[18]);
+            _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], actionsArray[23], actionsArray[19]);
+        }
+        else if (actionsArrayLength == 12)
+        {
+            _ragdoll.AddTorque(RagdollJoint.LeftHips, actionsArray[0], actionsArray[1], 0f);
+            _ragdoll.AddTorque(RagdollJoint.LeftKnee, actionsArray[2], 0f, 0f);
+            _ragdoll.AddTorque(RagdollJoint.RightHips, actionsArray[3], actionsArray[4], 0f);
+            _ragdoll.AddTorque(RagdollJoint.RightKnee, actionsArray[5], 0f, 0f);
+            _ragdoll.AddTorque(RagdollJoint.LeftArm, actionsArray[6], actionsArray[7], 0f);
+            _ragdoll.AddTorque(RagdollJoint.LeftElbow, actionsArray[8], 0f, 0f);
+            _ragdoll.AddTorque(RagdollJoint.RightArm, actionsArray[9], actionsArray[10], 0f);
+            _ragdoll.AddTorque(RagdollJoint.RightElbow, actionsArray[11], 0f, 0f);
+        }
         // _ragdoll.AddTorque(RagdollJoint.MiddleSpine, actionsArray[12], actionsArray[13], 0f);
         // _ragdoll.AddTorque(RagdollJoint.Head, actionsArray[14], actionsArray[15], 0f);
 
@@ -164,15 +172,7 @@ public class MannequinAgent : Agent
         _initTime = Random.Range(0f, animClip.length / 2);
 
         ResetRefPose(animClip, _initTime);
-        CopyRefPose();
-
-        foreach (var ragdollData in _ragdoll.RagdollDataDict.Select(kvp => kvp.Value))
-        {
-            ragdollData.RigidbodyComp.position = ragdollData.GetPosition();
-            ragdollData.RigidbodyComp.rotation = ragdollData.GetRotation();
-            ragdollData.RigidbodyComp.velocity = Vector3.zero;
-            ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
-        }
+        // CopyRefPose();
 
         StartCoroutine(WaitForStart());
     }
@@ -197,6 +197,10 @@ public class MannequinAgent : Agent
 
     private void CopyRefPose()
     {
+        var refRootT = RefAnimator.transform;
+        refRootT.localPosition = Vector3.zero;
+        refRootT.localRotation = Quaternion.identity;
+        
         var transforms = AgentMesh.GetComponentsInChildren<Transform>();
         foreach (var t in transforms)
         {
@@ -205,11 +209,20 @@ public class MannequinAgent : Agent
             t.localPosition = refT.localPosition;
             t.localRotation = refT.localRotation;
         }
+
+        foreach (var ragdollData in _ragdoll.RagdollDataDict.Select(kvp => kvp.Value))
+        {
+            // ragdollData.RigidbodyComp.position = ragdollData.GetPosition();
+            // ragdollData.RigidbodyComp.rotation = ragdollData.GetRotation();
+            ragdollData.RigidbodyComp.velocity = Vector3.zero;
+            ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
+        }
     }
 
     private IEnumerator WaitForStart()
     {
         yield return new WaitForEndOfFrame();
+        CopyRefPose();
         _isStarted = true;
     }
 
@@ -243,7 +256,7 @@ public class MannequinAgent : Agent
 
         // Time to next frame (1)
         sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
-        
+
         // Target State (5*13) * 3 = 195
         for (var i = 0; i < targetStatesLength; ++i)
         {
@@ -281,14 +294,14 @@ public class MannequinAgent : Agent
         var targetRoot = targetPose.Root;
         var rootInv = Quaternion.Inverse(root.GetLocalRotation());
 
-        var posReward = (root.GetLocalPosition().y - targetRoot.Position.y);
+        var posReward = root.GetLocalPosition().y - targetRoot.Position.y;
         posReward *= posReward;
         // var posReward = (root.GetLocalPosition() - targetRoot.Position).sqrMagnitude;
 
         var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
-        var velReward = (root.GetVelocity().y - targetRoot.Velocity.y);
+        var velReward = root.GetVelocity().y - targetRoot.Velocity.y;
         velReward *= velReward;
         // var velReward = (root.GetVelocity() - targetRoot.Velocity).sqrMagnitude;
 
@@ -341,8 +354,8 @@ public class MannequinAgent : Agent
             var avDiff = data.GetAngularVelocity() - root.GetAngularVelocity() - targetData.AngularVelocity;
             var jointAvReward = avDiff.sqrMagnitude;
             totalJointAvReward += jointAvReward / 2;
-            
-            
+
+
             // print($"{joint} : {jointPosReward} / {jointRotReward}");
         }
 
@@ -368,7 +381,7 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + velReward) / 1f - 1f;
+        var totalReward = (posReward + velReward / 5) / 0.6f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2 || posReward < 0.2)
         {

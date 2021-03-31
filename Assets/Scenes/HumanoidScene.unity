@@ -508,8 +508,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 8880660565688990449}
+  m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -637,8 +636,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: -20}
   m_LocalScale: {x: 5, y: 1, z: 5}
   m_Children: []
-  m_Father: {fileID: 1601646748}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &9023848117775166903
 MonoBehaviour:
@@ -655,8 +654,3 @@ MonoBehaviour:
   mannequinAgentPrefab: {fileID: 6910611179954499938, guid: 87caee960b7492f4e8fce2f82949d8ce,
     type: 3}
   mannequinRef: {fileID: 0}
-  _animatorRef: {fileID: 0}
-  animationLength: 0
-  animationClip: {fileID: -5110005273006501454, guid: 705c1b12b303422ed8ec3e96dea9156a,
-    type: 3}
-  folder: {fileID: 0}
