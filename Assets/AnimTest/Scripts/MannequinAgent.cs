@@ -366,8 +366,8 @@ public class MannequinAgent : Agent
 
         // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
 
-        posReward += totalJointPosReward / 2f;
-        rotReward += totalJointRotReward / 10f;
+        posReward += totalJointPosReward / 10f;
+        rotReward += totalJointRotReward / 1f;
         velReward += totalJointVelReward / 10f;
         avReward += totalJointAvReward / 10f;
 
@@ -381,7 +381,7 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + velReward / 5) / 0.6f - 1f;
+        var totalReward = (posReward + rotReward + velReward / 5) / 1.1f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2 || posReward < 0.2)
         {
