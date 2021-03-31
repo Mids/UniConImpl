@@ -43,6 +43,8 @@ public class MannequinAgent : Agent
     private Vector3 _prevCenterOfMass;
 
     private MotionData _currentMotion;
+    private Quaternion _initRootRotation;
+    private Quaternion _initRootRotationInv;
     public GameObject AgentMesh;
     public AnimationClip animClip;
     public float fps = 30f;
@@ -184,6 +186,10 @@ public class MannequinAgent : Agent
         t.localPosition = Vector3.zero;
         t.localRotation = Quaternion.identity;
 
+        var initPose = _currentMotion.GetPose((int) (time * 30f));
+        _initRootRotation = initPose.Root.Rotation;
+        _initRootRotationInv = Quaternion.Inverse(initPose.Root.Rotation);
+
         if (tOverrideController == default)
         {
             tOverrideController = new AnimatorOverrideController(RefAnimator.runtimeAnimatorController);
@@ -199,7 +205,9 @@ public class MannequinAgent : Agent
     {
         var refRootT = RefAnimator.transform;
         refRootT.localPosition = Vector3.zero;
-        refRootT.localRotation = Quaternion.identity;
+        refRootT.localRotation = _initRootRotation;
+        AgentMesh.transform.localPosition = Vector3.zero;
+        AgentMesh.transform.localRotation = _initRootRotation;
         
         var transforms = AgentMesh.GetComponentsInChildren<Transform>();
         foreach (var t in transforms)
@@ -212,8 +220,8 @@ public class MannequinAgent : Agent
 
         foreach (var ragdollData in _ragdoll.RagdollDataDict.Select(kvp => kvp.Value))
         {
-            // ragdollData.RigidbodyComp.position = ragdollData.GetPosition();
-            // ragdollData.RigidbodyComp.rotation = ragdollData.GetRotation();
+            ragdollData.RigidbodyComp.position = ragdollData.GetPosition();
+            ragdollData.RigidbodyComp.rotation = ragdollData.GetRotation();
             ragdollData.RigidbodyComp.velocity = Vector3.zero;
             ragdollData.RigidbodyComp.angularVelocity = Vector3.zero;
         }
@@ -239,7 +247,7 @@ public class MannequinAgent : Agent
         var rootInv = Quaternion.Inverse(root.GetRotation());
 
         sensor.AddObservation(root.GetLocalPosition());
-        sensor.AddObservation(root.GetLocalRotation());
+        sensor.AddObservation(root.GetRotation());
         sensor.AddObservation(root.GetVelocity());
         sensor.AddObservation(root.GetAngularVelocity());
 
@@ -292,13 +300,13 @@ public class MannequinAgent : Agent
         // TODO: Recalculate reward function
         var root = _ragdoll.RagdollDataDict[RagdollJoint.Pelvis];
         var targetRoot = targetPose.Root;
-        var rootInv = Quaternion.Inverse(root.GetLocalRotation());
+        var rootInv = Quaternion.Inverse(root.GetRotation());
 
         var posReward = root.GetLocalPosition().y - targetRoot.Position.y;
         posReward *= posReward;
         // var posReward = (root.GetLocalPosition() - targetRoot.Position).sqrMagnitude;
 
-        var rotReward = Quaternion.Angle(root.GetLocalRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
+        var rotReward = Quaternion.Angle(root.GetRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
         var velReward = root.GetVelocity().y - targetRoot.Velocity.y;
@@ -367,7 +375,7 @@ public class MannequinAgent : Agent
         // sw.WriteLine($"{posReward}\t{rotReward}\t{velReward}\t{avReward}");
 
         posReward += totalJointPosReward / 10f;
-        rotReward += totalJointRotReward / 1f;
+        rotReward += totalJointRotReward / 5f;
         velReward += totalJointVelReward / 10f;
         avReward += totalJointAvReward / 10f;
 
