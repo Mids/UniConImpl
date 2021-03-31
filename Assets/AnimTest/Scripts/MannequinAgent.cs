@@ -43,6 +43,7 @@ public class MannequinAgent : Agent
     private Vector3 _prevCenterOfMass;
 
     private MotionData _currentMotion;
+    private SkeletonData _initPose;
     private Quaternion _initRootRotation;
     private Quaternion _initRootRotationInv;
     public GameObject AgentMesh;
@@ -134,7 +135,7 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        AddReward((1f - forcePenalty) / 1000);
+        // AddReward((1f - forcePenalty) / 1000);
 #if UNITY_EDITOR
         ShowReward();
 #endif
@@ -186,9 +187,9 @@ public class MannequinAgent : Agent
         t.localPosition = Vector3.zero;
         t.localRotation = Quaternion.identity;
 
-        var initPose = _currentMotion.GetPose((int) (time * 30f));
-        _initRootRotation = initPose.Root.Rotation;
-        _initRootRotationInv = Quaternion.Inverse(initPose.Root.Rotation);
+        _initPose = _currentMotion.GetPose((int) (time * 30f));
+        _initRootRotation = _initPose.Root.Rotation;
+        _initRootRotationInv = Quaternion.Inverse(_initPose.Root.Rotation);
 
         if (tOverrideController == default)
         {
@@ -205,10 +206,10 @@ public class MannequinAgent : Agent
     {
         var refRootT = RefAnimator.transform;
         refRootT.localPosition = Vector3.zero;
-        refRootT.localRotation = _initRootRotation;
-        AgentMesh.transform.localPosition = Vector3.zero;
-        AgentMesh.transform.localRotation = _initRootRotation;
-        
+        refRootT.localRotation = Quaternion.AngleAxis(_initRootRotation.eulerAngles.y, Vector3.up);
+        AgentMesh.transform.localPosition = refRootT.localPosition;
+        AgentMesh.transform.localRotation = refRootT.localRotation;
+
         var transforms = AgentMesh.GetComponentsInChildren<Transform>();
         foreach (var t in transforms)
         {
@@ -391,7 +392,7 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 5) / 1.1f - 1f;
 // #if !UNITY_EDITOR
-        if (posReward < 0.2 || posReward < 0.2)
+        if (posReward < 0.2 || rotReward < 0.2)
         {
             _isTerminated = true;
             totalReward = -1;
