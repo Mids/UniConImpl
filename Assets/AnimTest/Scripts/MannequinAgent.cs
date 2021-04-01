@@ -304,7 +304,7 @@ public class MannequinAgent : Agent
         var rootInv = Quaternion.Inverse(root.GetRotation());
 
         var posReward = root.GetLocalPosition().y - targetRoot.Position.y;
-        posReward *= posReward;
+        posReward *= posReward * 2;
         // var posReward = (root.GetLocalPosition() - targetRoot.Position).sqrMagnitude;
 
         var rotReward = Quaternion.Angle(root.GetRotation(), targetRoot.Rotation) / 180 * Mathf.PI; // degrees
