@@ -333,12 +333,12 @@ public class MannequinAgent : Agent
                 case RagdollJoint.RightFoot:
                     bone = HumanBodyBones.RightFoot;
                     break;
-                // case RagdollJoint.LeftHand:
-                //     bone = HumanBodyBones.LeftHand;
-                //     break;
-                // case RagdollJoint.RightHand:
-                //     bone = HumanBodyBones.RightHand;
-                //     break;
+                case RagdollJoint.LeftHand:
+                    bone = HumanBodyBones.LeftHand;
+                    break;
+                case RagdollJoint.RightHand:
+                    bone = HumanBodyBones.RightHand;
+                    break;
                 default:
                     continue;
             }
