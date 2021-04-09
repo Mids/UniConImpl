@@ -271,12 +271,23 @@ public class MannequinAgent : Agent
         {
             var targetPose = _currentMotion.GetPose(currentFrame + FrameOffset[i]);
 
-            foreach (var bone in SkeletonData.allBones)
+            var allBones = new[]
             {
-                sensor.AddObservation(targetPose[bone].Position);
-                sensor.AddObservation(targetPose[bone].Rotation);
-                sensor.AddObservation(targetPose[bone].Velocity);
-                sensor.AddObservation(targetPose[bone].AngularVelocity);
+                "mixamorig1:LeftFoot",
+                "mixamorig1:RightFoot",
+                "mixamorig1:LeftHand",
+                "mixamorig1:RightHand"
+            };
+            sensor.AddObservation(targetPose.Root.Position);
+            sensor.AddObservation(targetPose.Root.Rotation);
+            sensor.AddObservation(targetPose.Root.Velocity);
+            sensor.AddObservation(targetPose.Root.AngularVelocity);
+            foreach (var bone in allBones)
+            {
+                sensor.AddObservation(targetPose.JointDict[bone].Position);
+                sensor.AddObservation(targetPose.JointDict[bone].Rotation);
+                sensor.AddObservation(targetPose.JointDict[bone].Velocity);
+                sensor.AddObservation(targetPose.JointDict[bone].AngularVelocity);
             }
         }
     }
@@ -324,27 +335,27 @@ public class MannequinAgent : Agent
         var totalJointAvReward = 0f;
         foreach (RagdollJoint joint in joints)
         {
-            HumanBodyBones bone;
+            string bone;
             switch (joint)
             {
                 case RagdollJoint.LeftFoot:
-                    bone = HumanBodyBones.LeftFoot;
+                    bone = "mixamorig1:LeftFoot";
                     break;
                 case RagdollJoint.RightFoot:
-                    bone = HumanBodyBones.RightFoot;
+                    bone = "mixamorig1:RightFoot";
                     break;
                 case RagdollJoint.LeftHand:
-                    bone = HumanBodyBones.LeftHand;
+                    bone = "mixamorig1:LeftHand";
                     break;
                 case RagdollJoint.RightHand:
-                    bone = HumanBodyBones.RightHand;
+                    bone = "mixamorig1:RightHand";
                     break;
                 default:
                     continue;
             }
 
             var data = _ragdoll.RagdollDataDict[joint];
-            var targetData = targetPose[bone];
+            var targetData = targetPose.JointDict[bone];
 
             var posDiff = rootInv * (data.GetPosition() - root.GetPosition()) - targetData.Position;
             var jointPosReward = posDiff.sqrMagnitude;

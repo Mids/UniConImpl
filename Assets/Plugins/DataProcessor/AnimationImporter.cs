@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions.TestingHelpers;
-using System.Linq;
 using UnityEngine;
 
 namespace DataProcessor
@@ -13,13 +12,17 @@ namespace DataProcessor
             var sr = new StreamReader(path);
             var skeletonData = new List<SkeletonData>(100);
 
+            var jointLine = sr.ReadLine();
             while (true)
             {
                 var line = sr.ReadLine();
                 if (line == default)
                     break;
 
-                skeletonData.Add(new SkeletonData(line));
+                var sd = new SkeletonData();
+                sd.InitDict(jointLine);
+                sd.InitData(line);
+                skeletonData.Add(sd);
             }
 
             sr.Close();
@@ -32,8 +35,14 @@ namespace DataProcessor
             var lines = textAsset.text.SplitLines();
             var skeletonData = new List<SkeletonData>(100);
 
-            skeletonData.AddRange(
-                lines.TakeWhile(line => line != default).Select(line => new SkeletonData(line)));
+            var jointLine = lines[0];
+            for (var i = 1; i < lines.Length; ++i)
+            {
+                var sd = new SkeletonData();
+                sd.InitDict(jointLine);
+                sd.InitData(lines[i]);
+                skeletonData.Add(sd);
+            }
 
             return new MotionData(skeletonData);
         }
