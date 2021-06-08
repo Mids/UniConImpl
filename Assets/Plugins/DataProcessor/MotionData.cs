@@ -1,34 +1,33 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
 
-namespace DataProcessor
+#endif // UNITY_EDITOR
+
+public class MotionData : ScriptableObject
 {
-    public class MotionData
+    public string characterName;
+    public string motionName;
+    public int totalFrame;
+    public float fps = 60;
+    public List<SkeletonData> data;
+
+    public void Init(int frameCount)
     {
-        public List<SkeletonData> Data;
+        totalFrame = frameCount;
+        data = new List<SkeletonData>(frameCount);
+    }
 
-        public MotionData(List<SkeletonData> data)
-        {
-            Data = data;
-        }
-
-        public MotionData(int totalFrame)
-        {
-            Data = new List<SkeletonData>(totalFrame);
-        }
-
-        public SkeletonData GetPose(int frame)
-        {
-            if (frame < Data.Count) return Data[frame];
-
-            Debug.LogWarning("Calling old frame");
-            return Data[Data.Count - 1];
-        }
-
-        public override string ToString()
-        {
-            return Data.Aggregate("", (current, datum) => current + $"{datum}\n");
-        }
+    public void Save()
+    {
+#if UNITY_EDITOR
+        var path = $"Assets/output/{motionName}.motion.asset";
+        Debug.Log($"Saving to {path}");
+        if (!AssetDatabase.IsValidFolder("Assets/output"))
+            AssetDatabase.CreateFolder("Assets", "output");
+        AssetDatabase.CreateAsset(this, path);
+        AssetDatabase.SaveAssets();
+#endif // UNITY_EDITOR
     }
 }

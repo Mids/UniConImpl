@@ -1,18 +1,15 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using DataProcessor;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 public class TrainingArea : MonoBehaviour
 {
     public MannequinAgent mannequinAgentPrefab;
-    public GameObject mannequinRef;
 
     private Rigidbody[] _rigidbody;
 
-    public readonly Dictionary<string, MotionData> MotionDict = new Dictionary<string, MotionData>();
     private Dictionary<string, AnimationClip> AnimDict;
+
+    public MotionData[] motions;
 
     // Start is called before the first frame update
     private void Start()
@@ -24,7 +21,7 @@ public class TrainingArea : MonoBehaviour
 #else
         int size = 5;
 #endif
-        int gap = 4;
+        int gap = 5;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)
             Instantiate(mannequinAgentPrefab, new Vector3(
@@ -36,40 +33,21 @@ public class TrainingArea : MonoBehaviour
 
     public void InitArea()
     {
-        GetAllMotionTXT("Motions");
-        GetAllAnimClips("MannequinAnimation");
+        motions = Resources.LoadAll<MotionData>("Motions");
     }
 
-    private void GetAllMotionTXT(string dirPath)
+    public int GetRandomMotionIndex()
     {
-        var infos = Resources.LoadAll<TextAsset>(dirPath);
-        foreach (var textAsset in infos)
-        {
-            if (textAsset == default) continue;
-
-            var motionData = AnimationImporter.Import(textAsset);
-            MotionDict[textAsset.name] = motionData;
-        }
+        return Random.Range(0, motions.Length);
     }
 
-    private void GetAllAnimClips(string dirPath)
+    public MotionData GetMotion(int index)
     {
-        AnimDict = Resources.LoadAll<AnimationClip>(dirPath)
-            .Where(p => MotionDict.ContainsKey(p.name))
-            .ToDictionary(p => p.name);
-
-        Assert.IsTrue(AnimDict.Count == MotionDict.Count,
-            $"{MotionDict.Count - AnimDict.Count} Animation Clips are lost");
+        return motions[index];
     }
 
-    public KeyValuePair<string, MotionData> GetRandomMotion()
+    public int GetMotionTotalFrame(int index)
     {
-        var idx = Random.Range(0, MotionDict.Count);
-        return MotionDict.ElementAt(idx);
-    }
-
-    public AnimationClip GetAnimationClip(string key)
-    {
-        return AnimDict[key];
+        return motions[index].data.Count;
     }
 }

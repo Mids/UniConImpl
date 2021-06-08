@@ -31,7 +31,7 @@ Transform:
   m_LocalScale: {x: 5, y: 1, z: 5}
   m_Children: []
   m_Father: {fileID: 8880660567128800044}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &558297408
 MeshFilter:
@@ -56,6 +56,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -80,6 +81,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &558297406
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -122,7 +124,6 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 5036862282305078427}
   - {fileID: 558297409}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -139,54 +140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bd6586abbc595948b55cd956f6ab04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mannequinAgentPrefab: {fileID: 6910611179954499938, guid: 87caee960b7492f4e8fce2f82949d8ce,
+  mannequinAgentPrefab: {fileID: 7059140856800124868, guid: c9e0d2a9e22290841a4147648c7d0559,
     type: 3}
-  mannequinRef: {fileID: 6556565606192576472}
-  _animatorRef: {fileID: 0}
-  animationLength: 0
---- !u!1001 &7459449376899484407
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 8880660567128800044}
-    m_Modifications:
-    - target: {fileID: 2478050859322297964, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2478050859322297964, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2478050859322297964, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2478050859322297964, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4429518938476166447, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-        type: 3}
-      propertyPath: m_Name
-      value: MannequinRef
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2d227b1a53b2aba4b8540f2b1a1b916f, type: 3}
---- !u!1 &6556565606192576472 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4429518938476166447, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-    type: 3}
-  m_PrefabInstance: {fileID: 7459449376899484407}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &5036862282305078427 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2478050859322297964, guid: 2d227b1a53b2aba4b8540f2b1a1b916f,
-    type: 3}
-  m_PrefabInstance: {fileID: 7459449376899484407}
-  m_PrefabAsset: {fileID: 0}
+  mannequinRef: {fileID: 0}
+  motions: []
