@@ -62,7 +62,9 @@ public class MannequinAgent : Agent
     {
         base.Initialize();
         _trainingArea = GetComponentInParent<TrainingArea>();
+#if UNITY_EDITOR
         _RefAP = GetComponentInChildren<AnimationPlayer>();
+#endif // UNITY_EDITOR
 
         // RefTransform = _trainingArea.mannequinRef.transform;
         // var refABs = RefTransform.GetComponentsInChildren<ArticulationBody>().ToList();
@@ -102,15 +104,18 @@ public class MannequinAgent : Agent
 
         forcePenalty /= actionsArrayLength;
 
-        for (int i = 1; i < AgentABs.Count; ++i)
-            AgentABs[i].AddRelativeTorque(new Vector3(actionsArray[i * 3 - 3], actionsArray[i * 3 - 2],
+        for (var i = 1; i < AgentABs.Count; ++i)
+            AgentABs[i].AddRelativeTorque(new Vector3(
+                actionsArray[i * 3 - 3],
+                actionsArray[i * 3 - 2],
                 actionsArray[i * 3 - 1]));
 
 
         SetReward(0);
         AddTargetStateReward();
-        // AddReward((1f - forcePenalty) / 1000);
+        AddReward((1f - forcePenalty) / 1000);
 #if UNITY_EDITOR
+        print(new Vector3(actionsArray[6], actionsArray[7], actionsArray[8]));
         ShowReward();
 #endif
     }
@@ -253,12 +258,15 @@ public class MannequinAgent : Agent
         var root = AgentTransforms[0];
         var rootAB = AgentABs[0];
         var targetRoot = targetPose.joints[0];
-        var rootRot = root.parent.localRotation * root.localRotation;
+        var rootParent = root.parent;
+        var parentRot = rootParent.localRotation;
+        var rootPos = rootParent.localPosition + parentRot * root.localPosition;
+        var rootRot = parentRot * root.localRotation;
         var rootInv = Quaternion.Inverse(rootRot);
 
-        // var posReward = root.localPosition.y - targetRoot.position.y;
-        // posReward *= posReward * 2;
-        var posReward = (root.parent.localPosition + root.localPosition - targetRoot.position).sqrMagnitude;
+        var posReward = rootPos.y - targetRoot.position.y;
+        posReward *= posReward;
+        // var posReward = (rootPos - targetRoot.position).sqrMagnitude;
 
         var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
@@ -278,6 +286,7 @@ public class MannequinAgent : Agent
         var jointNum = AgentABs.Count;
         for (var index = 1; index < jointNum; ++index)
         {
+            if (index != 3 && index != 6 && index != 11 && index != 15) continue;
             var jointT = AgentTransforms[index];
             var jointAB = AgentABs[index];
             var targetData = targetPose.joints[index];
@@ -285,7 +294,6 @@ public class MannequinAgent : Agent
             var posDiff = rootInv * (jointT.position - root.position) - targetData.position;
             var jointPosReward = posDiff.sqrMagnitude;
             totalJointPosReward += jointPosReward;
-
 
             var rotDiff = Quaternion.Angle(rootInv * jointT.rotation, targetData.rotation);
             var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
@@ -301,29 +309,45 @@ public class MannequinAgent : Agent
             totalJointAvReward += jointAvReward;
         }
 
+
+        var com = Vector3.zero;
+        var totalMass = 0f;
+        foreach (var jointAB in AgentABs)
+        {
+            var mass = jointAB.mass;
+            com += (jointAB.worldCenterOfMass - root.position) * mass;
+            totalMass += mass;
+        }
+
+        com /= totalMass;
+        com -= targetPose.centerOfMass;
+        var comReward = com.sqrMagnitude;
+
+
 #if UNITY_EDITOR
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n" +
         //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
 #endif
 
-        posReward += totalJointPosReward / 150f;
-        rotReward += totalJointRotReward / 20f;
-        velReward += totalJointVelReward / 150f;
-        avReward += totalJointAvReward / 40f;
+        posReward += totalJointPosReward / 40f;
+        rotReward += totalJointRotReward / 5f;
+        velReward += totalJointVelReward / 40f;
+        avReward += totalJointAvReward / 10f;
 
 
-        posReward = Mathf.Exp(-3 * posReward);
+        posReward = Mathf.Exp(posReward * -5);
         rotReward = Mathf.Exp(rotReward / -2);
         velReward = Mathf.Exp(velReward / -20);
         avReward = Mathf.Exp(avReward / -100);
+        comReward = Mathf.Exp(comReward * -100);
 
 #if UNITY_EDITOR
-        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n");
+        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 5) / 1.1f - 1f;
+        var totalReward = (posReward + rotReward + velReward / 5 + comReward) / 1.6f - 1f;
 // #if !UNITY_EDITOR
-        if (posReward < 0.1 || rotReward < 0.1)
+        if (posReward < 0.2 || rotReward < 0.2)
         {
             _isTerminated = true;
             totalReward = -1;
