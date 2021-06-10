@@ -286,7 +286,10 @@ public class MannequinAgent : Agent
         var jointNum = AgentABs.Count;
         for (var index = 1; index < jointNum; ++index)
         {
-            if (index != 3 && index != 6 && index != 11 && index != 15) continue;
+            if (index != 3 &&
+                index != 6 &&
+                index != 11 &&
+                index != 15) continue;
             var jointT = AgentTransforms[index];
             var jointAB = AgentABs[index];
             var targetData = targetPose.joints[index];
@@ -338,14 +341,14 @@ public class MannequinAgent : Agent
         posReward = Mathf.Exp(posReward * -5);
         rotReward = Mathf.Exp(rotReward / -2);
         velReward = Mathf.Exp(velReward / -20);
-        avReward = Mathf.Exp(avReward / -100);
+        avReward = Mathf.Exp(avReward / -50);
         comReward = Mathf.Exp(comReward * -100);
 
 #if UNITY_EDITOR
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 5 + comReward) / 1.6f - 1f;
+        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 1.7f - 1f;
 // #if !UNITY_EDITOR
         if (posReward < 0.2 || rotReward < 0.2)
         {
