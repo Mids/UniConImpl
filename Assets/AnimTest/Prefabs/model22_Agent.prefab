@@ -942,7 +942,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7344831862335200265}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 60a09434b6e84614a82a7f7c9c6f8b1e, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -1005,7 +1005,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7734766674636354874}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 60a09434b6e84614a82a7f7c9c6f8b1e, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -1178,7 +1178,7 @@ MonoBehaviour:
     VectorActionSize: 22000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 7473d1249cb95d642b7e809ad9e493be, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 367a64d7defce064da77901d78f03745, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
