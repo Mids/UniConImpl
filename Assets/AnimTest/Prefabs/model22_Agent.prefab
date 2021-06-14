@@ -450,7 +450,7 @@ ArticulationBody:
     target: 0
     targetVelocity: 0
   m_ZDrive:
-    lowerLimit: -20
+    lowerLimit: 0
     upperLimit: 150
     stiffness: 100
     damping: 100
@@ -557,9 +557,9 @@ ArticulationBody:
   m_LinearX: 2
   m_LinearY: 2
   m_LinearZ: 2
-  m_SwingY: 1
+  m_SwingY: 0
   m_SwingZ: 1
-  m_Twist: 1
+  m_Twist: 0
   m_XDrive:
     lowerLimit: -90
     upperLimit: 90
@@ -577,7 +577,7 @@ ArticulationBody:
     target: 0
     targetVelocity: 0
   m_ZDrive:
-    lowerLimit: -120
+    lowerLimit: 0
     upperLimit: 120
     stiffness: 100
     damping: 100
@@ -621,9 +621,9 @@ ArticulationBody:
   m_LinearX: 2
   m_LinearY: 2
   m_LinearZ: 2
-  m_SwingY: 1
+  m_SwingY: 0
   m_SwingZ: 1
-  m_Twist: 1
+  m_Twist: 0
   m_XDrive:
     lowerLimit: -90
     upperLimit: 90
@@ -641,7 +641,7 @@ ArticulationBody:
     target: 0
     targetVelocity: 0
   m_ZDrive:
-    lowerLimit: -120
+    lowerLimit: 0
     upperLimit: 120
     stiffness: 100
     damping: 100
@@ -1112,7 +1112,7 @@ ArticulationBody:
     target: 0
     targetVelocity: 0
   m_ZDrive:
-    lowerLimit: -20
+    lowerLimit: 0
     upperLimit: 120
     stiffness: 100
     damping: 100
@@ -1178,7 +1178,7 @@ MonoBehaviour:
     VectorActionSize: 2d000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 54aca838382d34141a2be99de0ab21e4, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 18f9a8034ba51684fb15770365b173ed, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1214,7 +1214,11 @@ MonoBehaviour:
   fps: 30
   AgentTransforms: []
   AgentABs: []
-  forceMultiplier: 5
+  forceMultiplier: 200
+  curl: 0
+  curlNum: 3
+  curlForce: 0
+  curlPair: []
 --- !u!114 &5427339318280091616
 MonoBehaviour:
   m_ObjectHideFlags: 0

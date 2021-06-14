@@ -54,6 +54,14 @@ public class MannequinAgent : Agent
 
     public float forceMultiplier;
 
+#if UNITY_EDITOR
+    public bool curl = false;
+    public int curlNum = 3;
+    public float curlForce = 0f;
+
+    public List<Vector2> curlPair = new List<Vector2>();
+#endif // UNITY_EDITOR
+
     // public AnimationPlayer RefModel;
     // private Transform RefTransform;
     // private List<Transform> RefTransforms;
@@ -102,6 +110,12 @@ public class MannequinAgent : Agent
             actionsArray[i] *= forceMultiplier;
         }
 
+#if UNITY_EDITOR
+        if (curl)
+            foreach (var kvp in curlPair)
+                actionsArray[(int) kvp.x] = kvp.y;
+#endif // UNITY_EDITOR
+
         forcePenalty /= actionsArrayLength;
 
         for (var i = 1; i < AgentABs.Count; ++i)
@@ -115,7 +129,7 @@ public class MannequinAgent : Agent
         AddTargetStateReward();
         AddReward((1f - forcePenalty) / 1000);
 #if UNITY_EDITOR
-        print(new Vector3(actionsArray[6], actionsArray[7], actionsArray[8]));
+        print(new Vector3(actionsArray[3], actionsArray[4], actionsArray[5]));
         ShowReward();
 #endif
     }
@@ -332,17 +346,17 @@ public class MannequinAgent : Agent
         //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
 #endif
 
-        posReward += totalJointPosReward / 40f;
-        rotReward += totalJointRotReward / 5f;
-        velReward += totalJointVelReward / 40f;
-        avReward += totalJointAvReward / 10f;
+        posReward += totalJointPosReward / 4f;
+        rotReward += totalJointRotReward / 4f;
+        velReward += totalJointVelReward / 4f;
+        avReward += totalJointAvReward / 4f;
 
 
         posReward = Mathf.Exp(posReward * -5);
         rotReward = Mathf.Exp(rotReward / -2);
-        velReward = Mathf.Exp(velReward / -20);
-        avReward = Mathf.Exp(avReward / -50);
-        comReward = Mathf.Exp(comReward * -100);
+        velReward = Mathf.Exp(velReward / -10);
+        avReward = Mathf.Exp(avReward / -20);
+        comReward = Mathf.Exp(comReward * -200);
 
 #if UNITY_EDITOR
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
@@ -350,7 +364,7 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 1.7f - 1f;
 // #if !UNITY_EDITOR
-        if (posReward < 0.2 || rotReward < 0.2)
+        if (rootPos.y < 0.1 || AgentTransforms[11].position.y < 0.1 || AgentTransforms[15].position.y < 0.1)
         {
             _isTerminated = true;
             totalReward = -1;
