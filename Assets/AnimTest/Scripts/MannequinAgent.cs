@@ -107,6 +107,8 @@ public class MannequinAgent : Agent
         for (var i = 0; i < actionsArrayLength; i++)
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i];
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i];
             actionsArray[i] *= forceMultiplier;
         }
 
