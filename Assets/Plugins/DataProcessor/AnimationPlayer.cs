@@ -17,12 +17,13 @@ public class AnimationPlayer : MonoBehaviour
     {
         dt = 1f / motion.fps;
         JointABs = GetComponentsInChildren<ArticulationBody>().ToList();
-        Assert.IsTrue(JointABs[0].isRoot);
-        JointTransforms = JointABs.Select(p => p.transform).ToList();
-        foreach (var jointAB in JointABs)
+        if (JointABs.Count > 0)
         {
-            jointAB.enabled = false;
+            Assert.IsTrue(JointABs[0].isRoot);
+            JointTransforms = JointABs.Select(p => p.transform).ToList();
+            foreach (var jointAB in JointABs) jointAB.enabled = false;
         }
+
         StartCoroutine(Play());
     }
 
@@ -32,10 +33,10 @@ public class AnimationPlayer : MonoBehaviour
         {
             var rootPos = transform.position + skeleton.joints[0].position;
             var rootRot = skeleton.joints[0].rotation;
-            
+
             JointTransforms[0].position = rootPos;
             JointTransforms[0].rotation = rootRot;
-            
+
             for (var index = 1; index < JointTransforms.Count; index++)
             {
                 JointTransforms[index].position = rootPos + rootRot * skeleton.joints[index].position;

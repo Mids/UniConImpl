@@ -87,9 +87,9 @@ ArticulationBody:
   m_Enabled: 1
   m_Mass: 0.5
   m_ParentAnchorPosition: {x: -0.40061882, y: -0.00000012863893, z: 0.000000010195776}
-  m_ParentAnchorRotation: {x: 0.6685194, y: -0.7433499, z: -0.008403978, w: -0.021033067}
+  m_ParentAnchorRotation: {x: 0.9983424, y: -0.052913137, z: 0.008930114, w: -0.020815134}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
-  m_AnchorRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
+  m_AnchorRotation: {x: 0, y: 0, z: 0, w: 1}
   m_ComputeParentAnchor: 1
   m_ArticulationJointType: 3
   m_LinearX: 2
@@ -1178,7 +1178,7 @@ MonoBehaviour:
     VectorActionSize: 22000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 367a64d7defce064da77901d78f03745, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: a3a04ad2722b4de42843109b071d2058, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1214,7 +1214,7 @@ MonoBehaviour:
   fps: 30
   AgentTransforms: []
   AgentABs: []
-  forceMultiplier: 100
+  forceMultiplier: 10
   curl: 0
   curlNum: 3
   curlForce: 0
@@ -1480,6 +1480,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8430278312401105675}
     m_Modifications:
+    - target: {fileID: 4716739169765463053, guid: df9ee58f3bb4a714888e51e926c98f27,
+        type: 3}
+      propertyPath: m_AnchorRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4716739169765463053, guid: df9ee58f3bb4a714888e51e926c98f27,
+        type: 3}
+      propertyPath: m_AnchorRotation.z
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8676774368201949939, guid: df9ee58f3bb4a714888e51e926c98f27,
         type: 3}
       propertyPath: m_RootOrder
