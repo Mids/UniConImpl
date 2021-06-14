@@ -100,7 +100,7 @@ public class MannequinAgent : Agent
          */
         var actionsArray = actions.ContinuousActions.Array;
 
-        Assert.IsTrue(actionsArray.Length == AgentABs.Count * 3 - 3);
+        // Assert.IsTrue(actionsArray.Length == );
 
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
@@ -118,11 +118,24 @@ public class MannequinAgent : Agent
 
         forcePenalty /= actionsArrayLength;
 
+        // 3 * 10 + 1 * 4 = 34
+        var actionIndex = 0;
         for (var i = 1; i < AgentABs.Count; ++i)
-            AgentABs[i].AddRelativeTorque(new Vector3(
-                actionsArray[i * 3 - 3],
-                actionsArray[i * 3 - 2],
-                actionsArray[i * 3 - 1]));
+            if (AgentABs[i].dofCount == 1)
+            {
+                AgentABs[i].AddRelativeTorque(new Vector3(
+                    0, 0, actionsArray[actionIndex]));
+
+                actionIndex += 1;
+            }
+            else if (AgentABs[i].dofCount == 3)
+            {
+                AgentABs[i].AddRelativeTorque(new Vector3(
+                    actionsArray[actionIndex],
+                    actionsArray[actionIndex + 1],
+                    actionsArray[actionIndex + 2]));
+                actionIndex += 3;
+            }
 
 
         SetReward(0);
@@ -364,7 +377,7 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 1.7f - 1f;
 // #if !UNITY_EDITOR
-        if (rootPos.y < 0.1 || AgentTransforms[11].position.y < 0.1 || AgentTransforms[15].position.y < 0.1)
+        if (rootPos.y > 5 || rootPos.y < 0.1 || AgentTransforms[11].position.y < 0.1 || AgentTransforms[15].position.y < 0.1)
         {
             _isTerminated = true;
             totalReward = -1;

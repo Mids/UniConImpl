@@ -1175,10 +1175,10 @@ MonoBehaviour:
   m_BrainParameters:
     VectorObservationSize: 832
     NumStackedVectorObservations: 1
-    VectorActionSize: 2d000000
+    VectorActionSize: 22000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 18f9a8034ba51684fb15770365b173ed, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
