@@ -75,3 +75,4 @@ Assets/AnimTest/NNModels*
 reward.txt
 *.motion.asset*
 Assets/ML-Agents/Timers/HumanoidScene_timers.json
+actionOutput.txt

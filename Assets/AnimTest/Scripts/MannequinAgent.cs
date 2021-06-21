@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TMPro;
 using Unity.MLAgents;
@@ -60,6 +61,8 @@ public class MannequinAgent : Agent
     public float curlForce = 0f;
 
     public List<Vector2> curlPair = new List<Vector2>();
+
+    public StreamWriter sw;
 #endif // UNITY_EDITOR
 
     // public AnimationPlayer RefModel;
@@ -72,6 +75,7 @@ public class MannequinAgent : Agent
         _trainingArea = GetComponentInParent<TrainingArea>();
 #if UNITY_EDITOR
         _RefAP = GetComponentInChildren<AnimationPlayer>();
+        sw = new StreamWriter("actionOutput.txt");
 #endif // UNITY_EDITOR
 
         // RefTransform = _trainingArea.mannequinRef.transform;
@@ -102,13 +106,17 @@ public class MannequinAgent : Agent
 
         // Assert.IsTrue(actionsArray.Length == );
 
+#if UNITY_EDITOR
+        var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
+        sw.WriteLine(actionString);
+#endif // UNITY_EDITOR
+
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
         for (var i = 0; i < actionsArrayLength; i++)
         {
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
             forcePenalty += actionsArray[i] * actionsArray[i];
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i];
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i];
             actionsArray[i] *= forceMultiplier;
         }
 
@@ -149,11 +157,13 @@ public class MannequinAgent : Agent
 #endif
     }
 
+#if UNITY_EDITOR
     private void OnDestroy()
     {
-        // sw.Close();
+        sw.Close();
     }
 
+#endif // UNITY_EDITOR
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         for (var index = 0; index < actionsOut.ContinuousActions.Array.Length; index++)
