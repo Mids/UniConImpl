@@ -1178,7 +1178,7 @@ MonoBehaviour:
     VectorActionSize: 22000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: a3a04ad2722b4de42843109b071d2058, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 5c23e5458e2e45448b837f46a68d28af, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1214,11 +1214,12 @@ MonoBehaviour:
   fps: 30
   AgentTransforms: []
   AgentABs: []
-  forceMultiplier: 10
+  forceMultiplier: 50
   curl: 0
   curlNum: 3
   curlForce: 0
-  curlPair: []
+  curlPair:
+  - {x: 3, y: -10}
 --- !u!114 &5427339318280091616
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -377,12 +377,12 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 1.7f - 1f;
+        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 34 * 11 - 0.1f;
 // #if !UNITY_EDITOR
         if (rootPos.y < 0.1 
             || AgentTransforms[11].position.y < 0.1 
             || AgentTransforms[15].position.y < 0.1
-            || totalReward < -0.9f)
+            || totalReward < 0f)
         {
             _isTerminated = true;
             totalReward = -1;
