@@ -57,12 +57,9 @@ public class MannequinAgent : Agent
 
 #if UNITY_EDITOR
     public bool curl = false;
-    public int curlNum = 3;
-    public float curlForce = 0f;
-
     public List<Vector2> curlPair = new List<Vector2>();
 
-    public StreamWriter sw;
+    private StreamWriter _sw;
 #endif // UNITY_EDITOR
 
     // public AnimationPlayer RefModel;
@@ -75,7 +72,7 @@ public class MannequinAgent : Agent
         _trainingArea = GetComponentInParent<TrainingArea>();
 #if UNITY_EDITOR
         _RefAP = GetComponentInChildren<AnimationPlayer>();
-        sw = new StreamWriter("actionOutput.txt");
+        _sw = new StreamWriter("actionOutput.txt");
 #endif // UNITY_EDITOR
 
         // RefTransform = _trainingArea.mannequinRef.transform;
@@ -108,15 +105,15 @@ public class MannequinAgent : Agent
 
 #if UNITY_EDITOR
         var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
-        sw.WriteLine(actionString);
+        _sw.WriteLine(actionString);
 #endif // UNITY_EDITOR
 
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
         for (var i = 0; i < actionsArrayLength; i++)
         {
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
             forcePenalty += actionsArray[i] * actionsArray[i];
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
             actionsArray[i] *= forceMultiplier;
         }
 
@@ -150,9 +147,9 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        AddReward((1f - forcePenalty) / 1000);
+        AddReward((0.5f - forcePenalty) / 10);
 #if UNITY_EDITOR
-        print(new Vector3(actionsArray[3], actionsArray[4], actionsArray[5]));
+        print($"Force penalty : {(0.5f - forcePenalty) / 10}");
         ShowReward();
 #endif
     }
@@ -160,7 +157,7 @@ public class MannequinAgent : Agent
 #if UNITY_EDITOR
     private void OnDestroy()
     {
-        sw.Close();
+        _sw.Close();
     }
 
 #endif // UNITY_EDITOR
@@ -194,7 +191,7 @@ public class MannequinAgent : Agent
         _currentFrame = _initFrame;
 
         _initPose = currentMotion.data[_currentFrame];
-        _initRootPosition = transform.position + new Vector3(0, _initPose.joints[0].position.y, 0);
+        _initRootPosition = transform.position + new Vector3(0, 0.8f, 0);
         _initRootRotation = _initPose.joints[0].rotation;
         _initRootRotationInv = Quaternion.Inverse(_initRootRotation);
 
@@ -387,7 +384,7 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 34 * 11 - 0.1f;
+        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 3.4f - 0.1f;
 // #if !UNITY_EDITOR
         if (rootPos.y < 0.1 
             || AgentTransforms[11].position.y < 0.1 
