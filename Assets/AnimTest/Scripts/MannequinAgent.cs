@@ -7,7 +7,6 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [RequireComponent(typeof(BehaviorParameters))]
 public class MannequinAgent : Agent
@@ -53,7 +52,7 @@ public class MannequinAgent : Agent
     public List<Transform> AgentTransforms;
     public List<ArticulationBody> AgentABs;
 
-    public float forceMultiplier;
+    public List<float> powerVector;
 
 #if UNITY_EDITOR
     public bool curl = false;
@@ -82,6 +81,21 @@ public class MannequinAgent : Agent
 
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
+
+        Physics.IgnoreCollision(AgentABs[1].GetComponent<Collider>(), AgentABs[2].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[2].GetComponent<Collider>(), AgentABs[3].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[4].GetComponent<Collider>(), AgentABs[5].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[5].GetComponent<Collider>(), AgentABs[6].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[1].GetComponent<Collider>(), AgentABs[7].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[4].GetComponent<Collider>(), AgentABs[7].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[7].GetComponent<Collider>(), AgentABs[8].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[9].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[9].GetComponent<Collider>(), AgentABs[10].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[10].GetComponent<Collider>(), AgentABs[11].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[12].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[13].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[13].GetComponent<Collider>(), AgentABs[14].GetComponent<Collider>());
+        Physics.IgnoreCollision(AgentABs[14].GetComponent<Collider>(), AgentABs[15].GetComponent<Collider>());
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -114,7 +128,6 @@ public class MannequinAgent : Agent
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
             actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
-            actionsArray[i] *= forceMultiplier;
         }
 
 #if UNITY_EDITOR
@@ -131,16 +144,16 @@ public class MannequinAgent : Agent
             if (AgentABs[i].dofCount == 1)
             {
                 AgentABs[i].AddRelativeTorque(new Vector3(
-                    0, 0, actionsArray[actionIndex]));
+                    0, 0, powerVector[i] * actionsArray[actionIndex]));
 
                 actionIndex += 1;
             }
             else if (AgentABs[i].dofCount == 3)
             {
                 AgentABs[i].AddRelativeTorque(new Vector3(
-                    actionsArray[actionIndex],
-                    actionsArray[actionIndex + 1],
-                    actionsArray[actionIndex + 2]));
+                    powerVector[i] * actionsArray[actionIndex],
+                    powerVector[i] * actionsArray[actionIndex + 1],
+                    powerVector[i] * actionsArray[actionIndex + 2]));
                 actionIndex += 3;
             }
 
@@ -386,8 +399,8 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 3.4f - 0.1f;
 // #if !UNITY_EDITOR
-        if (rootPos.y < 0.1 
-            || AgentTransforms[11].position.y < 0.1 
+        if (rootPos.y < 0.1
+            || AgentTransforms[11].position.y < 0.1
             || AgentTransforms[15].position.y < 0.1
             || totalReward < 0f)
         {
