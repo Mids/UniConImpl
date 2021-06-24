@@ -55,6 +55,7 @@ public class MannequinAgent : Agent
     public List<ArticulationBody> AgentABs;
 
     public List<float> powerVector;
+    private float[] lastActionsArray;
 
 #if UNITY_EDITOR
     public bool curl = false;
@@ -106,25 +107,34 @@ public class MannequinAgent : Agent
         var actionsArray = actions.ContinuousActions.Array;
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
+        lastActionsArray ??= new float[actionsArrayLength];
 
 #if UNITY_EDITOR
         var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
         _sw.WriteLine(actionString);
 #endif // UNITY_EDITOR
 
-        for (var i = 0; i < actionsArrayLength; i++)
+        if (_isInitialized)
         {
-            forcePenalty += actionsArray[i] * actionsArray[i];
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
+            for (var i = 0; i < actionsArrayLength; i++)
+            {
+                var diff = actionsArray[i] - lastActionsArray[i];
+                forcePenalty += diff * diff;
+            }
+
+            forcePenalty /= actionsArrayLength;
         }
+
+        actionsArray.CopyTo(lastActionsArray, 0);
+
+        for (var i = 0; i < actionsArrayLength; i++)
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
 
 #if UNITY_EDITOR
         if (curl)
             foreach (var kvp in curlPair)
                 actionsArray[(int) kvp.x] = kvp.y;
 #endif // UNITY_EDITOR
-
-        forcePenalty /= actionsArrayLength;
 
         // 3 * 10 + 1 * 4 = 34
         var actionIndex = 0;
