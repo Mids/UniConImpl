@@ -1178,7 +1178,7 @@ MonoBehaviour:
     VectorActionSize: 22000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 085942785f850164aa9bd83fb0b68594, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 69c7217035e708b4e959ba2bafb8d24f, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1214,7 +1214,6 @@ MonoBehaviour:
   fps: 30
   AgentTransforms: []
   AgentABs: []
-  forceMultiplier: 500
   powerVector:
   - 0
   - 500
@@ -1247,8 +1246,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 1
-  TakeActionsBetweenDecisions: 1
+  DecisionPeriod: 5
+  TakeActionsBetweenDecisions: 0
 --- !u!65 &4924488993747942950
 BoxCollider:
   m_ObjectHideFlags: 0

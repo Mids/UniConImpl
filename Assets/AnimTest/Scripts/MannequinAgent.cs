@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TMPro;
@@ -28,6 +29,7 @@ public class MannequinAgent : Agent
     private int _currentFrame = -1;
     private float _lastReward = 0;
     private bool _isRewarded = false;
+    private bool _isInitialized = false;
 
     public int targetStatesLength = 3;
     private static readonly int[] FrameOffset = {1, 4, 16};
@@ -69,6 +71,7 @@ public class MannequinAgent : Agent
     {
         base.Initialize();
         _trainingArea = GetComponentInParent<TrainingArea>();
+        _isInitialized = false;
 #if UNITY_EDITOR
         _RefAP = GetComponentInChildren<AnimationPlayer>();
         _sw = new StreamWriter("actionOutput.txt");
@@ -100,30 +103,15 @@ public class MannequinAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        /***
-         * LeftHips, // X, Y
-         * LeftKnee, // X
-         * RightHips, // X, Y
-         * RightKnee, // X
-         * LeftArm, // X, Y
-         * LeftElbow, // X
-         * RightArm, // X, Y
-         * RightElbow, // X
-         * 2+1+2+1+2+1+2+1 = 12
-         *
-         * 15*3=45a
-         */
         var actionsArray = actions.ContinuousActions.Array;
-
-        // Assert.IsTrue(actionsArray.Length == );
+        var forcePenalty = 0f;
+        var actionsArrayLength = actionsArray.Length;
 
 #if UNITY_EDITOR
         var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
         _sw.WriteLine(actionString);
 #endif // UNITY_EDITOR
 
-        var forcePenalty = 0f;
-        var actionsArrayLength = actionsArray.Length;
         for (var i = 0; i < actionsArrayLength; i++)
         {
             forcePenalty += actionsArray[i] * actionsArray[i];
@@ -182,6 +170,7 @@ public class MannequinAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        _isInitialized = false;
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
         _currentFrame = -1;
@@ -210,13 +199,14 @@ public class MannequinAgent : Agent
 
         // ResetRefPose();
         ResetAgentPose();
+        StartCoroutine(WaitForInit());
     }
 
-    // private void ResetRefPose()
-    // {
-    //     RefModel.motion = _currentMotion;
-    //     RefModel.PlayCoroutine();
-    // }
+    private IEnumerator WaitForInit()
+    {
+        yield return null;
+        _isInitialized = true;
+    }
 
     private void ResetAgentPose()
     {
@@ -244,27 +234,41 @@ public class MannequinAgent : Agent
         // 208+624 = 832
         var currentFrame = _currentFrame;
         var jointNum = AgentABs.Count;
-
-        // Current State (16 * 13) = 208
         var rootAB = AgentABs[0];
         var root = AgentTransforms[0];
         var rootRot = root.localRotation;
         var rootInv = Quaternion.Inverse(rootRot);
 
-        sensor.AddObservation(root.localPosition);
-        sensor.AddObservation(rootRot);
-        sensor.AddObservation(rootAB.velocity);
-        sensor.AddObservation(rootAB.angularVelocity);
-
-        for (var index = 1; index < jointNum; index++)
+        // Current State (16 * 13) = 208
+        if (_isInitialized)
         {
-            var jointAB = AgentABs[index];
-            var jointT = AgentTransforms[index];
+            sensor.AddObservation(root.localPosition);
+            sensor.AddObservation(rootRot);
+            sensor.AddObservation(rootAB.velocity);
+            sensor.AddObservation(rootAB.angularVelocity);
 
-            sensor.AddObservation(rootInv * (jointT.position - root.position));
-            sensor.AddObservation(rootInv * jointT.rotation);
-            sensor.AddObservation(jointAB.velocity - rootAB.velocity);
-            sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
+            for (var index = 1; index < jointNum; index++)
+            {
+                var jointAB = AgentABs[index];
+                var jointT = AgentTransforms[index];
+
+                sensor.AddObservation(rootInv * (jointT.position - root.position));
+                sensor.AddObservation(rootInv * jointT.rotation);
+                sensor.AddObservation(jointAB.velocity - rootAB.velocity);
+                sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
+            }
+        }
+        else
+        {
+            var targetPose = currentMotion.data[currentFrame];
+
+            foreach (var joint in targetPose.joints)
+            {
+                sensor.AddObservation(joint.position);
+                sensor.AddObservation(joint.rotation);
+                sensor.AddObservation(joint.velocity);
+                sensor.AddObservation(joint.angularVelocity);
+            }
         }
 
         // Time to next frame (1)
@@ -293,12 +297,8 @@ public class MannequinAgent : Agent
         var animationTime = _initTime + _episodeTime;
         var curFrame = (int) (animationTime * fps);
         var targetPose = currentMotion.data[curFrame];
-        if (_currentFrame != curFrame)
-        {
-        }
 
         _currentFrame = curFrame;
-
         _isTerminated = false;
 
         // 193 + 600 = 793
@@ -381,14 +381,14 @@ public class MannequinAgent : Agent
         //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
 #endif
 
-        posReward += totalJointPosReward / 4f;
-        rotReward += totalJointRotReward / 4f;
+        posReward += totalJointPosReward / 8f;
+        rotReward += totalJointRotReward / 2f;
         velReward += totalJointVelReward / 4f;
         avReward += totalJointAvReward / 4f;
 
 
-        posReward = Mathf.Exp(posReward * -5);
-        rotReward = Mathf.Exp(rotReward / -2);
+        posReward = Mathf.Exp(posReward * -6);
+        rotReward = Mathf.Exp(rotReward / -3);
         velReward = Mathf.Exp(velReward / -10);
         avReward = Mathf.Exp(avReward / -20);
         comReward = Mathf.Exp(comReward * -200);
@@ -397,8 +397,8 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 5 + avReward / 5 + comReward) / 3.4f - 0.1f;
-// #if !UNITY_EDITOR
+        var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2 + comReward) / 4f - 0.1f;
+
         if (rootPos.y < 0.1
             || AgentTransforms[11].position.y < 0.1
             || AgentTransforms[15].position.y < 0.1
@@ -408,8 +408,9 @@ public class MannequinAgent : Agent
             totalReward = -1;
         }
 
-// #endif
         _isRewarded = true;
+
+        if (!_isInitialized) totalReward = 0.9f;
         AddReward(totalReward);
 
         if (_currentFrame == currentMotion.data.Count - 1)

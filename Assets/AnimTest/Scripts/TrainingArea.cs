@@ -14,6 +14,7 @@ public class TrainingArea : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
+        // Time.fixedDeltaTime = 1 / 30f;
         InitArea();
 
 #if UNITY_EDITOR
