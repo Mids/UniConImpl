@@ -267,6 +267,24 @@ public class MannequinAgent : Agent
                 sensor.AddObservation(jointAB.velocity - rootAB.velocity);
                 sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
             }
+#if UNITY_EDITOR
+            var targetPose = currentMotion.data[currentFrame];
+            Debug.DrawLine(Vector3.zero, targetPose.joints[1].position, Color.blue, 0.1f);
+            Debug.DrawLine(targetPose.joints[1].position, targetPose.joints[2].position, Color.blue, 0.1f);
+            Debug.DrawLine(targetPose.joints[2].position, targetPose.joints[3].position, Color.blue, 0.1f);
+            Debug.DrawLine(Vector3.zero, targetPose.joints[4].position, Color.cyan, 0.1f);
+            Debug.DrawLine(targetPose.joints[4].position, targetPose.joints[5].position, Color.cyan, 0.1f);
+            Debug.DrawLine(targetPose.joints[5].position, targetPose.joints[6].position, Color.cyan, 0.1f);
+            Debug.DrawLine(targetPose.joints[0].position, targetPose.joints[7].position, Color.green, 0.1f);
+            Debug.DrawLine(targetPose.joints[7].position, targetPose.joints[8].position, Color.green, 0.1f);
+            Debug.DrawLine(targetPose.joints[8].position, targetPose.joints[9].position, Color.magenta, 0.1f);
+            Debug.DrawLine(targetPose.joints[9].position, targetPose.joints[10].position, Color.magenta, 0.1f);
+            Debug.DrawLine(targetPose.joints[10].position, targetPose.joints[11].position, Color.magenta, 0.1f);
+            Debug.DrawLine(targetPose.joints[8].position, targetPose.joints[12].position, Color.green, 0.1f);
+            Debug.DrawLine(targetPose.joints[8].position, targetPose.joints[13].position, Color.yellow, 0.1f);
+            Debug.DrawLine(targetPose.joints[13].position, targetPose.joints[14].position, Color.yellow, 0.1f);
+            Debug.DrawLine(targetPose.joints[14].position, targetPose.joints[15].position, Color.yellow, 0.1f);
+#endif // UNITY_EDITOR
         }
         else
         {
