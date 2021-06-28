@@ -429,6 +429,7 @@ public class MannequinAgent : Agent
 
         if (rootPos.y < 0.1
             || AgentTransforms[11].position.y < 0.1
+            || AgentTransforms[12].position.y < 0.1
             || AgentTransforms[15].position.y < 0.1
             || totalReward < 0f)
         {
