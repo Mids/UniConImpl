@@ -427,8 +427,7 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2 + comReward) / 4f - 0.1f;
 
-
-        if (totalReward < 0f)
+        if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1;
@@ -437,7 +436,7 @@ public class MannequinAgent : Agent
         {
             for (var index = 0; index < AgentTransforms.Count; index++)
             {
-                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1)
+                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
                     continue;
 
                 _isTerminated = true;
