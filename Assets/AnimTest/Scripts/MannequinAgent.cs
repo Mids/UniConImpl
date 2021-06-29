@@ -427,14 +427,23 @@ public class MannequinAgent : Agent
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2 + comReward) / 4f - 0.1f;
 
-        if (rootPos.y < 0.1
-            || AgentTransforms[11].position.y < 0.1
-            || AgentTransforms[12].position.y < 0.1
-            || AgentTransforms[15].position.y < 0.1
-            || totalReward < 0f)
+
+        if (totalReward < 0f)
         {
             _isTerminated = true;
             totalReward = -1;
+        }
+        else
+        {
+            for (var index = 0; index < AgentTransforms.Count; index++)
+            {
+                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1)
+                    continue;
+
+                _isTerminated = true;
+                totalReward = -1;
+                break;
+            }
         }
 
         _isRewarded = true;
