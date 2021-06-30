@@ -55,7 +55,7 @@ public class MannequinAgent : Agent
     public List<ArticulationBody> AgentABs;
 
     public List<float> powerVector;
-    private float[] lastActionsArray;
+    private float[] _lastActionsArray;
 
 #if UNITY_EDITOR
     public bool curl = false;
@@ -107,25 +107,38 @@ public class MannequinAgent : Agent
         var actionsArray = actions.ContinuousActions.Array;
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
-        lastActionsArray ??= new float[actionsArrayLength];
+        _lastActionsArray ??= new float[actionsArrayLength];
+
+        _episodeTime += Time.fixedDeltaTime;
+        var animationTime = _initTime + _episodeTime;
+        var curFrame = (int) (animationTime * fps);
+        _currentFrame = curFrame;
+
+        if (!_isInitialized)
+        {
+            for (var i = 0; i < actionsArrayLength; i++) forcePenalty += actionsArray[i] * actionsArray[i];
+            forcePenalty /= actionsArrayLength;
+            actionsArray.CopyTo(_lastActionsArray, 0);
+
+            SetReward(1f - forcePenalty);
+            return;
+        }
 
 #if UNITY_EDITOR
         var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
         _sw.WriteLine(actionString);
 #endif // UNITY_EDITOR
 
-        if (_isInitialized)
+        for (var i = 0; i < actionsArrayLength; i++)
         {
-            for (var i = 0; i < actionsArrayLength; i++)
-            {
-                var diff = actionsArray[i] - lastActionsArray[i];
-                forcePenalty += diff * diff;
-            }
-
-            forcePenalty /= actionsArrayLength;
+            var diff = actionsArray[i] - _lastActionsArray[i];
+            forcePenalty += diff * diff;
         }
 
-        actionsArray.CopyTo(lastActionsArray, 0);
+        forcePenalty /= actionsArrayLength;
+
+        actionsArray.CopyTo(_lastActionsArray, 0);
+
 
         for (var i = 0; i < actionsArrayLength; i++)
             actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
@@ -184,6 +197,8 @@ public class MannequinAgent : Agent
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
         _currentFrame = -1;
+        for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
+
 #if UNITY_EDITOR
         _lastReward = 0;
 #endif // UNITY_EDITOR
@@ -321,12 +336,8 @@ public class MannequinAgent : Agent
 
     public void AddTargetStateReward()
     {
-        _episodeTime += Time.fixedDeltaTime;
-        var animationTime = _initTime + _episodeTime;
-        var curFrame = (int) (animationTime * fps);
-        var targetPose = currentMotion.data[curFrame];
+        var targetPose = currentMotion.data[_currentFrame];
 
-        _currentFrame = curFrame;
         _isTerminated = false;
 
         // 193 + 600 = 793
@@ -416,7 +427,7 @@ public class MannequinAgent : Agent
 
 
         posReward = Mathf.Exp(posReward * -6);
-        rotReward = Mathf.Exp(rotReward / -3);
+        rotReward = Mathf.Exp(rotReward / -4);
         velReward = Mathf.Exp(velReward / -10);
         avReward = Mathf.Exp(avReward / -20);
         comReward = Mathf.Exp(comReward * -200);
