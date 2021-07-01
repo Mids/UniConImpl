@@ -56,6 +56,7 @@ public class MannequinAgent : Agent
 
     public List<float> powerVector;
     private float[] _lastActionsArray;
+    private float[] _lastActionsDiffArray;
 
     private Quaternion[] _initRotations;
 
@@ -111,6 +112,7 @@ public class MannequinAgent : Agent
         _earlyTerminationStack = 0;
         _currentFrame = -1;
         for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
+        for (var i = 0; i < _lastActionsDiffArray?.Length; i++) _lastActionsDiffArray[i] = 0f;
 
 #if UNITY_EDITOR
         _lastReward = 0;
@@ -239,6 +241,7 @@ public class MannequinAgent : Agent
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
         _lastActionsArray ??= new float[actionsArrayLength];
+        _lastActionsDiffArray ??= new float[actionsArrayLength];
 
         _episodeTime += Time.fixedDeltaTime;
         var animationTime = _initTime + _episodeTime;
@@ -253,13 +256,13 @@ public class MannequinAgent : Agent
         for (var i = 0; i < actionsArrayLength; i++)
         {
             var diff = actionsArray[i] - _lastActionsArray[i];
-            forcePenalty += diff * diff;
+            if (_lastActionsDiffArray[i] * diff < 0)
+                forcePenalty += diff * diff;
+            _lastActionsDiffArray[i] = diff;
         }
 
         forcePenalty /= actionsArrayLength;
-
         actionsArray.CopyTo(_lastActionsArray, 0);
-
 
         for (var i = 0; i < actionsArrayLength; i++)
             actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
