@@ -121,8 +121,7 @@ public class MannequinAgent : Agent
         var motionIndex = _trainingArea.GetRandomMotionIndex();
         currentMotion = _trainingArea.GetMotion(motionIndex);
 #if UNITY_EDITOR
-        _RefAP.motion = currentMotion;
-        _RefAP.PlayCoroutine();
+        _RefAP.SetMotion(currentMotion);
 #endif // UNITY_EDITOR
 
         // TODO: RSI
@@ -198,21 +197,7 @@ public class MannequinAgent : Agent
         }
 #if UNITY_EDITOR
         var currentPose = currentMotion.data[currentFrame];
-        Debug.DrawLine(Vector3.zero, currentPose.joints[1].position, Color.blue, 0.1f);
-        Debug.DrawLine(currentPose.joints[1].position, currentPose.joints[2].position, Color.blue, 0.1f);
-        Debug.DrawLine(currentPose.joints[2].position, currentPose.joints[3].position, Color.blue, 0.1f);
-        Debug.DrawLine(Vector3.zero, currentPose.joints[4].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[4].position, currentPose.joints[5].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[5].position, currentPose.joints[6].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[0].position, currentPose.joints[7].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[7].position, currentPose.joints[8].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[9].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[9].position, currentPose.joints[10].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[10].position, currentPose.joints[11].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[12].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[13].position, Color.yellow, 0.1f);
-        Debug.DrawLine(currentPose.joints[13].position, currentPose.joints[14].position, Color.yellow, 0.1f);
-        Debug.DrawLine(currentPose.joints[14].position, currentPose.joints[15].position, Color.yellow, 0.1f);
+        _RefAP.SetPose(currentPose);
 #endif // UNITY_EDITOR
 
 
