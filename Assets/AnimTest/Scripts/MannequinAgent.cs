@@ -57,6 +57,8 @@ public class MannequinAgent : Agent
     public List<float> powerVector;
     private float[] _lastActionsArray;
 
+    private Quaternion[] _initRotations;
+
 #if UNITY_EDITOR
     public bool curl = false;
     public List<Vector2> curlPair = new List<Vector2>();
@@ -84,6 +86,7 @@ public class MannequinAgent : Agent
 
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
+        _initRotations = AgentTransforms.Select(p => p.rotation).ToArray();
 
         Physics.IgnoreCollision(AgentABs[1].GetComponent<Collider>(), AgentABs[2].GetComponent<Collider>());
         Physics.IgnoreCollision(AgentABs[2].GetComponent<Collider>(), AgentABs[3].GetComponent<Collider>());
@@ -101,11 +104,133 @@ public class MannequinAgent : Agent
         Physics.IgnoreCollision(AgentABs[14].GetComponent<Collider>(), AgentABs[15].GetComponent<Collider>());
     }
 
-    private void FixedUpdate()
+    public override void OnEpisodeBegin()
     {
-        if (!_isInitialized) return;
+        _isInitialized = false;
+        _episodeTime = 0f;
+        _earlyTerminationStack = 0;
+        _currentFrame = -1;
+        for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
 
-        RequestDecision();
+#if UNITY_EDITOR
+        _lastReward = 0;
+#endif // UNITY_EDITOR
+
+        var motionIndex = _trainingArea.GetRandomMotionIndex();
+        currentMotion = _trainingArea.GetMotion(motionIndex);
+#if UNITY_EDITOR
+        _RefAP.motion = currentMotion;
+        _RefAP.PlayCoroutine();
+#endif // UNITY_EDITOR
+
+        // TODO: RSI
+        // _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex));
+        _initFrame = 0;
+        _initTime = _initFrame / fps;
+        _currentFrame = _initFrame;
+
+        _initPose = currentMotion.data[_currentFrame];
+        _initRootPosition = transform.position + new Vector3(0, 0.8f, 0);
+        _initRootRotation = _initPose.joints[0].rotation;
+        _initRootRotationInv = Quaternion.Inverse(_initRootRotation);
+
+        ResetAgentPose();
+        StartCoroutine(WaitForInit());
+    }
+
+    private IEnumerator WaitForInit()
+    {
+        yield return new WaitForFixedUpdate();
+        _isInitialized = true;
+    }
+
+    private void ResetAgentPose()
+    {
+        AgentABs[0].TeleportRoot(_initRootPosition, _initRootRotation);
+        AgentABs[0].velocity = _initPose.joints[0].velocity;
+        AgentABs[0].angularVelocity = _initPose.joints[0].angularVelocity;
+
+        for (int i = 1; i < AgentTransforms.Count; ++i)
+        {
+            AgentABs[i].ResetInertiaTensor();
+            // AgentABs[i].jointPosition = new ArticulationReducedSpace(0, 0, 0);
+
+            var newRot = _initRootRotation * _initPose.joints[i].rotation;
+            var localRot = Quaternion.Inverse(_initRotations[i]) * newRot;
+            var euler = localRot.eulerAngles * Mathf.PI / 180f;
+            var x = euler.x > Mathf.PI ? euler.x - 2 * Mathf.PI : euler.x;
+            var y = euler.y > Mathf.PI ? euler.y - 2 * Mathf.PI : euler.y;
+            var z = euler.z > Mathf.PI ? euler.z - 2 * Mathf.PI : euler.z;
+            AgentABs[i].jointPosition = new ArticulationReducedSpace(x, y, z);
+
+            AgentABs[i].velocity = _initPose.joints[i].velocity;
+            AgentABs[i].angularVelocity = _initPose.joints[i].angularVelocity;
+        }
+    }
+
+    public override void CollectObservations(VectorSensor sensor)
+    {
+        // 208+624 = 832
+        var currentFrame = _currentFrame;
+        var jointNum = AgentABs.Count;
+        var rootAB = AgentABs[0];
+        var root = AgentTransforms[0];
+        var rootRot = root.localRotation;
+        var rootInv = Quaternion.Inverse(rootRot);
+
+        // Current State (16 * 13) = 208
+        sensor.AddObservation(root.localPosition);
+        sensor.AddObservation(rootRot);
+        sensor.AddObservation(rootAB.velocity);
+        sensor.AddObservation(rootAB.angularVelocity);
+
+        for (var index = 1; index < jointNum; index++)
+        {
+            var jointAB = AgentABs[index];
+            var jointT = AgentTransforms[index];
+
+            sensor.AddObservation(rootInv * (jointT.position - root.position));
+            sensor.AddObservation(rootInv * jointT.rotation);
+            sensor.AddObservation(jointAB.velocity - rootAB.velocity);
+            sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
+        }
+#if UNITY_EDITOR
+        var currentPose = currentMotion.data[currentFrame];
+        Debug.DrawLine(Vector3.zero, currentPose.joints[1].position, Color.blue, 0.1f);
+        Debug.DrawLine(currentPose.joints[1].position, currentPose.joints[2].position, Color.blue, 0.1f);
+        Debug.DrawLine(currentPose.joints[2].position, currentPose.joints[3].position, Color.blue, 0.1f);
+        Debug.DrawLine(Vector3.zero, currentPose.joints[4].position, Color.cyan, 0.1f);
+        Debug.DrawLine(currentPose.joints[4].position, currentPose.joints[5].position, Color.cyan, 0.1f);
+        Debug.DrawLine(currentPose.joints[5].position, currentPose.joints[6].position, Color.cyan, 0.1f);
+        Debug.DrawLine(currentPose.joints[0].position, currentPose.joints[7].position, Color.green, 0.1f);
+        Debug.DrawLine(currentPose.joints[7].position, currentPose.joints[8].position, Color.green, 0.1f);
+        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[9].position, Color.magenta, 0.1f);
+        Debug.DrawLine(currentPose.joints[9].position, currentPose.joints[10].position, Color.magenta, 0.1f);
+        Debug.DrawLine(currentPose.joints[10].position, currentPose.joints[11].position, Color.magenta, 0.1f);
+        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[12].position, Color.green, 0.1f);
+        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[13].position, Color.yellow, 0.1f);
+        Debug.DrawLine(currentPose.joints[13].position, currentPose.joints[14].position, Color.yellow, 0.1f);
+        Debug.DrawLine(currentPose.joints[14].position, currentPose.joints[15].position, Color.yellow, 0.1f);
+#endif // UNITY_EDITOR
+
+
+        // Time to next frame (1)
+        // sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
+
+        // Target State (16*13) * 3 = 624
+        for (var i = 0; i < targetStatesLength; ++i)
+        {
+            var targetFrame = Mathf.Min(currentFrame + FrameOffset[i], currentMotion.data.Count - 1);
+            var targetPose = currentMotion.data[targetFrame];
+
+            foreach (var joint in targetPose.joints)
+            {
+                sensor.AddObservation(joint.position);
+                sensor.AddObservation(joint.rotation);
+                sensor.AddObservation(joint.velocity);
+                sensor.AddObservation(joint.angularVelocity);
+            }
+        }
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -174,140 +299,10 @@ public class MannequinAgent : Agent
 #endif
     }
 
-#if UNITY_EDITOR
-    private void OnDestroy()
-    {
-        _sw.Close();
-    }
-
-#endif // UNITY_EDITOR
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         for (var index = 0; index < actionsOut.ContinuousActions.Array.Length; index++)
             actionsOut.ContinuousActions.Array[index] = Random.Range(-1f, 1f);
-    }
-
-    public override void OnEpisodeBegin()
-    {
-        _isInitialized = false;
-        _episodeTime = 0f;
-        _earlyTerminationStack = 0;
-        _currentFrame = -1;
-        for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
-
-#if UNITY_EDITOR
-        _lastReward = 0;
-#endif // UNITY_EDITOR
-
-        var motionIndex = _trainingArea.GetRandomMotionIndex();
-        currentMotion = _trainingArea.GetMotion(motionIndex);
-#if UNITY_EDITOR
-        _RefAP.motion = currentMotion;
-        _RefAP.PlayCoroutine();
-#endif // UNITY_EDITOR
-
-        // TODO: RSI
-        // _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex));
-        _initTime = 0f;
-        _initFrame = 0;
-        _currentFrame = _initFrame;
-
-        _initPose = currentMotion.data[_currentFrame];
-        _initRootPosition = transform.position + new Vector3(0, 0.8f, 0);
-        _initRootRotation = _initPose.joints[0].rotation;
-        _initRootRotationInv = Quaternion.Inverse(_initRootRotation);
-
-        // ResetRefPose();
-        ResetAgentPose();
-        StartCoroutine(WaitForInit());
-    }
-
-    private IEnumerator WaitForInit()
-    {
-        yield return new WaitForFixedUpdate();
-        _isInitialized = true;
-    }
-
-    private void ResetAgentPose()
-    {
-        AgentABs[0].TeleportRoot(_initRootPosition, _initRootRotation);
-        AgentABs[0].velocity = _initPose.joints[0].velocity;
-        AgentABs[0].angularVelocity = _initPose.joints[0].angularVelocity;
-
-        for (int i = 1; i < AgentTransforms.Count; ++i)
-        {
-            AgentABs[i].ResetInertiaTensor();
-            // AgentABs[i].anchorRotation = Quaternion.identity;
-            AgentABs[i].jointPosition = new ArticulationReducedSpace(0, 0, 0);
-            AgentABs[i].velocity = _initPose.joints[i].velocity;
-            AgentABs[i].angularVelocity = _initPose.joints[i].angularVelocity;
-        }
-    }
-
-    public override void CollectObservations(VectorSensor sensor)
-    {
-        // TODO:
-        // 208+624 = 832
-        var currentFrame = _currentFrame;
-        var jointNum = AgentABs.Count;
-        var rootAB = AgentABs[0];
-        var root = AgentTransforms[0];
-        var rootRot = root.localRotation;
-        var rootInv = Quaternion.Inverse(rootRot);
-
-        // Current State (16 * 13) = 208
-        sensor.AddObservation(root.localPosition);
-        sensor.AddObservation(rootRot);
-        sensor.AddObservation(rootAB.velocity);
-        sensor.AddObservation(rootAB.angularVelocity);
-
-        for (var index = 1; index < jointNum; index++)
-        {
-            var jointAB = AgentABs[index];
-            var jointT = AgentTransforms[index];
-
-            sensor.AddObservation(rootInv * (jointT.position - root.position));
-            sensor.AddObservation(rootInv * jointT.rotation);
-            sensor.AddObservation(jointAB.velocity - rootAB.velocity);
-            sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
-        }
-#if UNITY_EDITOR
-        var currentPose = currentMotion.data[currentFrame];
-        Debug.DrawLine(Vector3.zero, currentPose.joints[1].position, Color.blue, 0.1f);
-        Debug.DrawLine(currentPose.joints[1].position, currentPose.joints[2].position, Color.blue, 0.1f);
-        Debug.DrawLine(currentPose.joints[2].position, currentPose.joints[3].position, Color.blue, 0.1f);
-        Debug.DrawLine(Vector3.zero, currentPose.joints[4].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[4].position, currentPose.joints[5].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[5].position, currentPose.joints[6].position, Color.cyan, 0.1f);
-        Debug.DrawLine(currentPose.joints[0].position, currentPose.joints[7].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[7].position, currentPose.joints[8].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[9].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[9].position, currentPose.joints[10].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[10].position, currentPose.joints[11].position, Color.magenta, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[12].position, Color.green, 0.1f);
-        Debug.DrawLine(currentPose.joints[8].position, currentPose.joints[13].position, Color.yellow, 0.1f);
-        Debug.DrawLine(currentPose.joints[13].position, currentPose.joints[14].position, Color.yellow, 0.1f);
-        Debug.DrawLine(currentPose.joints[14].position, currentPose.joints[15].position, Color.yellow, 0.1f);
-#endif // UNITY_EDITOR
-
-
-        // Time to next frame (1)
-        // sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
-
-        // Target State (16*13) * 3 = 624
-        for (var i = 0; i < targetStatesLength; ++i)
-        {
-            var targetFrame = Mathf.Min(currentFrame + FrameOffset[i], currentMotion.data.Count - 1);
-            var targetPose = currentMotion.data[targetFrame];
-
-            foreach (var joint in targetPose.joints)
-            {
-                sensor.AddObservation(joint.position);
-                sensor.AddObservation(joint.rotation);
-                sensor.AddObservation(joint.velocity);
-                sensor.AddObservation(joint.angularVelocity);
-            }
-        }
     }
 
 
@@ -461,4 +456,20 @@ public class MannequinAgent : Agent
         cumulativeRewardText.text = delta.ToString("0.00");
         _lastReward = GetCumulativeReward();
     }
+
+
+    private void FixedUpdate()
+    {
+        if (!_isInitialized) return;
+
+        RequestDecision();
+    }
+
+#if UNITY_EDITOR
+    private void OnDestroy()
+    {
+        _sw.Close();
+    }
+
+#endif // UNITY_EDITOR
 }
