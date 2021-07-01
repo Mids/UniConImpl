@@ -24,6 +24,7 @@ public class AnimationPlayer : MonoBehaviour
             foreach (var jointAB in JointABs) jointAB.enabled = false;
         }
 
+        StopAllCoroutines();
         StartCoroutine(Play());
     }
 
