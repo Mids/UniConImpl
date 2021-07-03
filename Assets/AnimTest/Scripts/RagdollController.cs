@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿#define RECORD_ACTION
+
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-// #define RECORD_ACTION
-
 public class RagdollController : MonoBehaviour
 {
-    private List<RagdollJoint> _abs;
+    private List<RagdollJoint> _joints;
     private int _size = 0;
     private float[] _lastActionsArray;
     private float[] _lastActionsDiffArray;
@@ -25,7 +26,10 @@ public class RagdollController : MonoBehaviour
             Assert.AreEqual(skeleton.joints.Length, _size);
 
         for (var i = 0; i < _size; ++i)
-            _abs[i].ResetJoint(skeleton.joints[0].rotation, skeleton.joints[i]);
+        {
+            _joints[i].SetTargetJoint(skeleton.joints[i]);
+            _joints[i].ResetJoint(skeleton.joints[0].rotation);
+        }
     }
 
     public float OnActionReceived(float[] actionsArray)
@@ -57,7 +61,7 @@ public class RagdollController : MonoBehaviour
 
         // 3 * 10 + 1 * 4 = 34
         var actionIndex = 0;
-        foreach (var ab in _abs)
+        foreach (var ab in _joints)
         {
             switch (ab.dofCount)
             {
@@ -77,10 +81,15 @@ public class RagdollController : MonoBehaviour
         return forcePenalty;
     }
 
+    public void FreezeAll(bool b)
+    {
+        _joints[0].Freeze(b);
+    }
+
     private void Awake()
     {
-        _abs = GetComponentsInChildren<RagdollJoint>().ToList();
-        _size = _abs.Count;
+        _joints = GetComponentsInChildren<RagdollJoint>().ToList();
+        _size = _joints.Count;
         SetParents();
 #if UNITY_EDITOR && RECORD_ACTION
         _sw = new StreamWriter("actionOutput.txt");
@@ -89,21 +98,21 @@ public class RagdollController : MonoBehaviour
 
     private void SetParents()
     {
-        _abs[1].SetRootAndParent(_abs[0], _abs[0]);
-        _abs[2].SetRootAndParent(_abs[0], _abs[1]);
-        _abs[3].SetRootAndParent(_abs[0], _abs[2]);
-        _abs[4].SetRootAndParent(_abs[0], _abs[0]);
-        _abs[5].SetRootAndParent(_abs[0], _abs[4]);
-        _abs[6].SetRootAndParent(_abs[0], _abs[5]);
-        _abs[7].SetRootAndParent(_abs[0], _abs[0]);
-        _abs[8].SetRootAndParent(_abs[0], _abs[7]);
-        _abs[9].SetRootAndParent(_abs[0], _abs[8]);
-        _abs[10].SetRootAndParent(_abs[0], _abs[9]);
-        _abs[11].SetRootAndParent(_abs[0], _abs[10]);
-        _abs[12].SetRootAndParent(_abs[0], _abs[8]);
-        _abs[13].SetRootAndParent(_abs[0], _abs[8]);
-        _abs[14].SetRootAndParent(_abs[0], _abs[13]);
-        _abs[15].SetRootAndParent(_abs[0], _abs[14]);
+        _joints[1].SetRootAndParent(_joints[0], _joints[0]);
+        _joints[2].SetRootAndParent(_joints[0], _joints[1]);
+        _joints[3].SetRootAndParent(_joints[0], _joints[2]);
+        _joints[4].SetRootAndParent(_joints[0], _joints[0]);
+        _joints[5].SetRootAndParent(_joints[0], _joints[4]);
+        _joints[6].SetRootAndParent(_joints[0], _joints[5]);
+        _joints[7].SetRootAndParent(_joints[0], _joints[0]);
+        _joints[8].SetRootAndParent(_joints[0], _joints[7]);
+        _joints[9].SetRootAndParent(_joints[0], _joints[8]);
+        _joints[10].SetRootAndParent(_joints[0], _joints[9]);
+        _joints[11].SetRootAndParent(_joints[0], _joints[10]);
+        _joints[12].SetRootAndParent(_joints[0], _joints[8]);
+        _joints[13].SetRootAndParent(_joints[0], _joints[8]);
+        _joints[14].SetRootAndParent(_joints[0], _joints[13]);
+        _joints[15].SetRootAndParent(_joints[0], _joints[14]);
     }
 
 #if UNITY_EDITOR && RECORD_ACTION

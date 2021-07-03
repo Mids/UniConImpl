@@ -112,12 +112,14 @@ public class MannequinAgent : Agent
 
     private IEnumerator WaitForInit()
     {
-        yield return new WaitForFixedUpdate();
+        yield return new WaitForEndOfFrame();
+        ragdollController.FreezeAll(false);
         _isInitialized = true;
     }
 
     private void ResetAgentPose()
     {
+        ragdollController.FreezeAll(true);
         ragdollController.ResetRagdoll(_initPose);
     }
 
