@@ -56,9 +56,6 @@ public class RagdollController : MonoBehaviour
         forcePenalty /= actionsArrayLength;
         actionsArray.CopyTo(_lastActionsArray, 0);
 
-        for (var i = 0; i < actionsArrayLength; i++)
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
-
         // 3 * 10 + 1 * 4 = 34
         var actionIndex = 0;
         foreach (var ab in _joints)

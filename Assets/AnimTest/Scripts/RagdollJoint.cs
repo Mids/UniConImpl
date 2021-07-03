@@ -79,7 +79,11 @@ public class RagdollJoint : MonoBehaviour
 
     private void AddRelativeTorque(Vector3 v)
     {
-        _ab.AddRelativeTorque(Vector3.Scale(v, powerVector));
+        v.Scale(powerVector);
+        _ab.AddRelativeTorque(new Vector3(
+            v.x * v.x * v.x * v.x * v.x,
+            v.y * v.y * v.y * v.y * v.y,
+            v.z * v.z * v.z * v.z * v.z));
     }
 
     public void AddRelativeTorque(float x, float y, float z)
@@ -87,17 +91,9 @@ public class RagdollJoint : MonoBehaviour
         Assert.AreEqual(_ab.dofCount, 3);
         // AddRelativeTorque(new Vector3(x, y, z));
 
-        var xDrive = _ab.xDrive;
-        xDrive.target = x;
-        _ab.xDrive = xDrive;
-
-        var yDrive = _ab.yDrive;
-        yDrive.target = y;
-        _ab.yDrive = yDrive;
-
-        var zDrive = _ab.zDrive;
-        zDrive.target = z;
-        _ab.zDrive = zDrive;
+        _ab.xDrive = SetTarget(_ab.xDrive, x);
+        _ab.yDrive = SetTarget(_ab.yDrive, y);
+        _ab.zDrive = SetTarget(_ab.zDrive, z);
     }
 
     public void AddRelativeTorque(float z)
@@ -105,9 +101,17 @@ public class RagdollJoint : MonoBehaviour
         Assert.AreEqual(_ab.dofCount, 1);
         // AddRelativeTorque(new Vector3(0, 0, z));
 
-        var zDrive = _ab.zDrive;
-        zDrive.target = z;
-        _ab.zDrive = zDrive;
+        _ab.zDrive = SetTarget(_ab.zDrive, z);
+    }
+
+    private ArticulationDrive SetTarget(ArticulationDrive drive, float t)
+    {
+        var lower = drive.lowerLimit;
+        var upper = drive.upperLimit;
+        var range = upper - lower;
+        var target = lower + (t + 1) / 2 * range;
+        drive.target = target;
+        return drive;
     }
 
     private void Awake()

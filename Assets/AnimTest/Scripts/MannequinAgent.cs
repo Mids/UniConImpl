@@ -224,8 +224,6 @@ public class MannequinAgent : Agent
         var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
 
-        // var velReward = rootAB.velocity.y - targetRoot.velocity.y;
-        // velReward *= velReward;
         var velReward = (rootAB.velocity - targetRoot.velocity).sqrMagnitude;
 
         var avReward = (rootAB.angularVelocity - targetRoot.angularVelocity).sqrMagnitude;
