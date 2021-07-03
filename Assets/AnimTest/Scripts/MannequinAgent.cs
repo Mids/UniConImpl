@@ -237,10 +237,10 @@ public class MannequinAgent : Agent
         var jointNum = AgentABs.Count;
         for (var index = 1; index < jointNum; ++index)
         {
-            if (index != 3 &&
-                index != 6 &&
-                index != 11 &&
-                index != 15) continue;
+            // if (index != 3 &&
+            //     index != 6 &&
+            //     index != 11 &&
+            //     index != 15) continue;
             var jointT = AgentTransforms[index];
             var jointAB = AgentABs[index];
             var targetData = targetPose.joints[index];
@@ -283,10 +283,10 @@ public class MannequinAgent : Agent
         //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
 #endif
 
-        posReward += totalJointPosReward / 8f;
-        rotReward += totalJointRotReward / 4f;
-        velReward += totalJointVelReward / 4f;
-        avReward += totalJointAvReward / 4f;
+        posReward += totalJointPosReward / 32f;
+        rotReward += totalJointRotReward / 16f;
+        velReward += totalJointVelReward / 16f;
+        avReward += totalJointAvReward / 16f;
 
 
         posReward = Mathf.Exp(posReward * -4);
@@ -296,7 +296,7 @@ public class MannequinAgent : Agent
         comReward = Mathf.Exp(comReward * -200);
 
 #if UNITY_EDITOR
-        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
+        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2 + comReward) / 4f - 0.1f;
