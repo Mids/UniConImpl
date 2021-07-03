@@ -53,19 +53,11 @@ public class MannequinAgent : Agent
 
     public List<Transform> AgentTransforms;
     public List<ArticulationBody> AgentABs;
+    public RagdollController ragdollController;
 
     public List<float> powerVector;
-    private float[] _lastActionsArray;
-    private float[] _lastActionsDiffArray;
 
     private Quaternion[] _initRotations;
-
-#if UNITY_EDITOR
-    public bool curl = false;
-    public List<Vector2> curlPair = new List<Vector2>();
-
-    private StreamWriter _sw;
-#endif // UNITY_EDITOR
 
     // public AnimationPlayer RefModel;
     // private Transform RefTransform;
@@ -77,32 +69,13 @@ public class MannequinAgent : Agent
         _trainingArea = GetComponentInParent<TrainingArea>();
 #if UNITY_EDITOR
         _RefAP = GetComponentInChildren<AnimationPlayer>();
-        _sw = new StreamWriter("actionOutput.txt");
 #endif // UNITY_EDITOR
 
-        // RefTransform = _trainingArea.mannequinRef.transform;
-        // var refABs = RefTransform.GetComponentsInChildren<ArticulationBody>().ToList();
-        // RefTransforms = refABs.Select(p => p.transform).ToList();
-        // RefModel = _trainingArea.mannequinRef.GetComponent<AnimationPlayer>();
+        ragdollController = GetComponent<RagdollController>();
 
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
         _initRotations = AgentTransforms.Select(p => p.rotation).ToArray();
-
-        Physics.IgnoreCollision(AgentABs[1].GetComponent<Collider>(), AgentABs[2].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[2].GetComponent<Collider>(), AgentABs[3].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[4].GetComponent<Collider>(), AgentABs[5].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[5].GetComponent<Collider>(), AgentABs[6].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[1].GetComponent<Collider>(), AgentABs[7].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[4].GetComponent<Collider>(), AgentABs[7].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[7].GetComponent<Collider>(), AgentABs[8].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[9].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[9].GetComponent<Collider>(), AgentABs[10].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[10].GetComponent<Collider>(), AgentABs[11].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[12].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[8].GetComponent<Collider>(), AgentABs[13].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[13].GetComponent<Collider>(), AgentABs[14].GetComponent<Collider>());
-        Physics.IgnoreCollision(AgentABs[14].GetComponent<Collider>(), AgentABs[15].GetComponent<Collider>());
     }
 
     public override void OnEpisodeBegin()
@@ -111,8 +84,6 @@ public class MannequinAgent : Agent
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
         _currentFrame = -1;
-        for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
-        for (var i = 0; i < _lastActionsDiffArray?.Length; i++) _lastActionsDiffArray[i] = 0f;
 
 #if UNITY_EDITOR
         _lastReward = 0;
@@ -147,26 +118,7 @@ public class MannequinAgent : Agent
 
     private void ResetAgentPose()
     {
-        AgentABs[0].TeleportRoot(_initRootPosition, _initRootRotation);
-        AgentABs[0].velocity = _initPose.joints[0].velocity;
-        AgentABs[0].angularVelocity = _initPose.joints[0].angularVelocity;
-
-        for (int i = 1; i < AgentTransforms.Count; ++i)
-        {
-            AgentABs[i].ResetInertiaTensor();
-            // AgentABs[i].jointPosition = new ArticulationReducedSpace(0, 0, 0);
-
-            var newRot = _initRootRotation * _initPose.joints[i].rotation;
-            var localRot = Quaternion.Inverse(_initRotations[i]) * newRot;
-            var euler = localRot.eulerAngles * Mathf.PI / 180f;
-            var x = euler.x > Mathf.PI ? euler.x - 2 * Mathf.PI : euler.x;
-            var y = euler.y > Mathf.PI ? euler.y - 2 * Mathf.PI : euler.y;
-            var z = euler.z > Mathf.PI ? euler.z - 2 * Mathf.PI : euler.z;
-            AgentABs[i].jointPosition = new ArticulationReducedSpace(x, y, z);
-
-            AgentABs[i].velocity = _initPose.joints[i].velocity;
-            AgentABs[i].angularVelocity = _initPose.joints[i].angularVelocity;
-        }
+        ragdollController.ResetRagdoll(_initPose);
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -222,62 +174,13 @@ public class MannequinAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        var actionsArray = actions.ContinuousActions.Array;
-        var forcePenalty = 0f;
-        var actionsArrayLength = actionsArray.Length;
-        _lastActionsArray ??= new float[actionsArrayLength];
-        _lastActionsDiffArray ??= new float[actionsArrayLength];
-
         _episodeTime += Time.fixedDeltaTime;
         var animationTime = _initTime + _episodeTime;
         var curFrame = (int) (animationTime * fps);
         _currentFrame = curFrame;
 
-#if UNITY_EDITOR
-        var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
-        _sw.WriteLine(actionString);
-#endif // UNITY_EDITOR
-
-        for (var i = 0; i < actionsArrayLength; i++)
-        {
-            var diff = actionsArray[i] - _lastActionsArray[i];
-            if (_lastActionsDiffArray[i] * diff < 0)
-                forcePenalty += diff * diff;
-            _lastActionsDiffArray[i] = diff;
-        }
-
-        forcePenalty /= actionsArrayLength;
-        actionsArray.CopyTo(_lastActionsArray, 0);
-
-        for (var i = 0; i < actionsArrayLength; i++)
-            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
-
-#if UNITY_EDITOR
-        if (curl)
-            foreach (var kvp in curlPair)
-                actionsArray[(int) kvp.x] = kvp.y;
-#endif // UNITY_EDITOR
-
-        // 3 * 10 + 1 * 4 = 34
-        var actionIndex = 0;
-        for (var i = 1; i < AgentABs.Count; ++i)
-            if (AgentABs[i].dofCount == 1)
-            {
-                AgentABs[i].AddRelativeTorque(new Vector3(
-                    0, 0, powerVector[i] * actionsArray[actionIndex]));
-
-                actionIndex += 1;
-            }
-            else if (AgentABs[i].dofCount == 3)
-            {
-                AgentABs[i].AddRelativeTorque(new Vector3(
-                    powerVector[i] * actionsArray[actionIndex],
-                    powerVector[i] * actionsArray[actionIndex + 1],
-                    powerVector[i] * actionsArray[actionIndex + 2]));
-                actionIndex += 3;
-            }
-
-
+        var forcePenalty = ragdollController.OnActionReceived(actions.ContinuousActions.Array);
+        
         SetReward(0);
         AddTargetStateReward();
         AddReward((0.5f - forcePenalty) / 10);
@@ -307,7 +210,7 @@ public class MannequinAgent : Agent
         var rootAB = AgentABs[0];
         var targetRoot = targetPose.joints[0];
         var rootParent = root.parent;
-        var parentRot = rootParent.localRotation;
+        var parentRot = rootParent.rotation;
         var rootPos = rootParent.localPosition + parentRot * root.localPosition;
         var rootRot = parentRot * root.localRotation;
         var rootInv = Quaternion.Inverse(rootRot);
@@ -452,12 +355,4 @@ public class MannequinAgent : Agent
 
         RequestDecision();
     }
-
-#if UNITY_EDITOR
-    private void OnDestroy()
-    {
-        _sw.Close();
-    }
-
-#endif // UNITY_EDITOR
 }

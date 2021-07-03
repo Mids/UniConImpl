@@ -1,143 +1,115 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
-
-public enum RagdollJoint
-{
-    Pelvis,
-    LeftHips, // X, Y
-    LeftKnee, // X
-    LeftFoot,
-    RightHips, // X, Y
-    RightKnee, // X
-    RightFoot,
-    LeftArm, // X, Y
-    LeftElbow, // X
-    LeftHand,
-    RightArm, // X, Y
-    RightElbow, // X
-    RightHand,
-    MiddleSpine, // X, Y
-    Head, // X, Y
-}
-
-public class RagdollData
-{
-    public static readonly Dictionary<RagdollJoint, string> RagdollJointNames = new Dictionary<RagdollJoint, string>()
-    {
-        {RagdollJoint.Pelvis, "Hips"},
-        {RagdollJoint.LeftHips, "LeftUpLeg"},
-        {RagdollJoint.LeftKnee, "LeftLeg"},
-        {RagdollJoint.LeftFoot, "LeftToeBase"},
-        {RagdollJoint.RightHips, "RightUpLeg"},
-        {RagdollJoint.RightKnee, "RightLeg"},
-        {RagdollJoint.RightFoot, "RightToeBase"},
-        {RagdollJoint.LeftArm, "LeftArm"},
-        {RagdollJoint.LeftElbow, "LeftForeArm"},
-        {RagdollJoint.LeftHand, "LeftHand"},
-        {RagdollJoint.RightArm, "RightArm"},
-        {RagdollJoint.RightElbow, "RightForeArm"},
-        {RagdollJoint.RightHand, "RightHand"},
-        {RagdollJoint.MiddleSpine, "Spine1"},
-        {RagdollJoint.Head, "Head"},
-    };
-    
-    public string Name;
-    public Transform AgentTransform;
-    public Rigidbody RigidbodyComp;
-
-    public RagdollData(string name)
-    {
-        Name = name;
-    }
-
-    public Vector3 GetPosition()
-    {
-        return AgentTransform.position;
-    }
-
-    public Quaternion GetRotation()
-    {
-        return AgentTransform.rotation;
-    }
-
-    public Vector3 GetLocalPosition()
-    {
-        return AgentTransform.localPosition;
-    }
-
-    public Quaternion GetLocalRotation()
-    {
-        return AgentTransform.localRotation;
-    }
-
-    public Vector3 GetVelocity()
-    {
-        return RigidbodyComp.velocity;
-    }
-
-    public Vector3 GetAngularVelocity()
-    {
-        return RigidbodyComp.angularVelocity;
-    }
-}
+using UnityEngine.Assertions;
 
 public class RagdollController : MonoBehaviour
 {
-    public GameObject agentMesh;
-    public readonly Dictionary<RagdollJoint, RagdollData> RagdollDataDict =
-        new Dictionary<RagdollJoint, RagdollData>();
+    private List<RagdollJoint> _abs;
+    private int _size = 0;
+    private float[] _lastActionsArray;
+    private float[] _lastActionsDiffArray;
 
-    // Start is called before the first frame update
-    private void Start()
+#if UNITY_EDITOR
+
+    private StreamWriter _sw;
+#endif // UNITY_EDITOR
+
+    public void ResetRagdoll(SkeletonData skeleton)
     {
-        foreach (var kvp in RagdollData.RagdollJointNames) 
-            RagdollDataDict[kvp.Key] = new RagdollData(kvp.Value);
+        for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
+        for (var i = 0; i < _lastActionsDiffArray?.Length; i++) _lastActionsDiffArray[i] = 0f;
 
-        var ragdollDatas = RagdollDataDict.Values.ToArray();
+        if (skeleton.joints.Length != _size)
+            Assert.AreEqual(skeleton.joints.Length, _size);
 
-        var transforms = agentMesh.GetComponentsInChildren<Transform>();
+        for (var i = 0; i < _size; ++i)
+            _abs[i].ResetJoint(skeleton.joints[0].rotation, skeleton.joints[i]);
+    }
 
-        foreach (var t in transforms)
+    public float OnActionReceived(float[] actionsArray)
+    {
+        var forcePenalty = 0f;
+        var actionsArrayLength = actionsArray.Length;
+        _lastActionsArray ??= new float[actionsArrayLength];
+        _lastActionsDiffArray ??= new float[actionsArrayLength];
+
+
+#if UNITY_EDITOR
+        var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
+        _sw.WriteLine(actionString);
+#endif // UNITY_EDITOR
+
+        for (var i = 0; i < actionsArrayLength; i++)
         {
-            var data = ragdollDatas.FirstOrDefault(p => t.name.Contains(p.Name));
-            if (data == default) continue;
-
-            data.AgentTransform = t;
-
-            var rigidbodyComp = t.GetComponent<Rigidbody>();
-            if (rigidbodyComp != default)
-                data.RigidbodyComp = rigidbodyComp;
-        }
-    }
-
-    public void AddTorque(RagdollJoint joint, float x, float y, float z)
-    {
-        AddTorque(joint, new Vector3(x, y, z));
-    }
-
-    public void AddTorque(RagdollJoint joint, Vector3 force)
-    {
-        if (!RagdollDataDict.ContainsKey(joint)) return;
-
-        RagdollDataDict[joint].RigidbodyComp.AddRelativeTorque(force, ForceMode.VelocityChange);
-    }
-
-    public Vector3 GetCenterOfMass()
-    {
-        var mass = 0f;
-        var centerOfMass = Vector3.zero;
-        
-        foreach (var rb in RagdollDataDict.Select(ragdollData => ragdollData.Value.RigidbodyComp))
-        {
-            rb.ResetCenterOfMass();
-         
-            mass += rb.mass;
-            centerOfMass += (rb.transform.position - transform.position + rb.centerOfMass) * rb.mass;
+            var diff = actionsArray[i] - _lastActionsArray[i];
+            if (_lastActionsDiffArray[i] * diff < 0)
+                forcePenalty += diff * diff;
+            _lastActionsDiffArray[i] = diff;
         }
 
-        centerOfMass /= mass;
-        
-        return centerOfMass;
+        forcePenalty /= actionsArrayLength;
+        actionsArray.CopyTo(_lastActionsArray, 0);
+
+        for (var i = 0; i < actionsArrayLength; i++)
+            actionsArray[i] = actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i] * actionsArray[i];
+
+        // 3 * 10 + 1 * 4 = 34
+        var actionIndex = 0;
+        foreach (var ab in _abs)
+        {
+            switch (ab.dofCount)
+            {
+                case 1:
+                    ab.AddRelativeTorque(actionsArray[actionIndex]);
+                    break;
+                case 3:
+                    ab.AddRelativeTorque(actionsArray[actionIndex],
+                        actionsArray[actionIndex + 1],
+                        actionsArray[actionIndex + 2]);
+                    break;
+            }
+
+            actionIndex += ab.dofCount;
+        }
+
+        return forcePenalty;
     }
+
+    private void Awake()
+    {
+        _abs = GetComponentsInChildren<RagdollJoint>().ToList();
+        _size = _abs.Count;
+        SetParents();
+#if UNITY_EDITOR
+        _sw = new StreamWriter("actionOutput.txt");
+#endif // UNITY_EDITOR
+    }
+
+    private void SetParents()
+    {
+        _abs[1].SetRootAndParent(_abs[0], _abs[0]);
+        _abs[2].SetRootAndParent(_abs[0], _abs[1]);
+        _abs[3].SetRootAndParent(_abs[0], _abs[2]);
+        _abs[4].SetRootAndParent(_abs[0], _abs[0]);
+        _abs[5].SetRootAndParent(_abs[0], _abs[4]);
+        _abs[6].SetRootAndParent(_abs[0], _abs[5]);
+        _abs[7].SetRootAndParent(_abs[0], _abs[0]);
+        _abs[8].SetRootAndParent(_abs[0], _abs[7]);
+        _abs[9].SetRootAndParent(_abs[0], _abs[8]);
+        _abs[10].SetRootAndParent(_abs[0], _abs[9]);
+        _abs[11].SetRootAndParent(_abs[0], _abs[10]);
+        _abs[12].SetRootAndParent(_abs[0], _abs[8]);
+        _abs[13].SetRootAndParent(_abs[0], _abs[8]);
+        _abs[14].SetRootAndParent(_abs[0], _abs[13]);
+        _abs[15].SetRootAndParent(_abs[0], _abs[14]);
+    }
+
+#if UNITY_EDITOR
+    private void OnDestroy()
+    {
+        _sw.Close();
+    }
+#endif // UNITY_EDITOR
 }
