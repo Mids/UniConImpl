@@ -22,13 +22,13 @@ public class TrainingArea : MonoBehaviour
 #else
         int size = 5;
 #endif
-        int gap = 5;
+        int gap = 20;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)
             Instantiate(mannequinAgentPrefab, new Vector3(
                 gap / 2 * (1 - size + 2 * i),
                 0,
-                gap * (-1 - j)
+                gap * -j
             ), Quaternion.identity, transform);
     }
 

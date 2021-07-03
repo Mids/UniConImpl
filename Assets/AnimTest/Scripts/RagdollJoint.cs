@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class RagdollJoint : MonoBehaviour
 {
     public int dofCount = 0;
-    public Vector3 powerVector = new Vector3(500, 500, 500);
+    public Vector3 powerVector = new Vector3(700, 700, 700);
     private ArticulationBody _ab;
     private RagdollJoint _root;
     private RagdollJoint _parent;

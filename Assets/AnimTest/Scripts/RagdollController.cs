@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
+
+// #define RECORD_ACTION
 
 public class RagdollController : MonoBehaviour
 {
@@ -11,10 +12,9 @@ public class RagdollController : MonoBehaviour
     private float[] _lastActionsArray;
     private float[] _lastActionsDiffArray;
 
-#if UNITY_EDITOR
-
+#if UNITY_EDITOR && RECORD_ACTION
     private StreamWriter _sw;
-#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR && RECORD_ACTION
 
     public void ResetRagdoll(SkeletonData skeleton)
     {
@@ -36,10 +36,10 @@ public class RagdollController : MonoBehaviour
         _lastActionsDiffArray ??= new float[actionsArrayLength];
 
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && RECORD_ACTION
         var actionString = actionsArray.Aggregate("", (current, action) => current + (action + "\t"));
         _sw.WriteLine(actionString);
-#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR && RECORD_ACTION
 
         for (var i = 0; i < actionsArrayLength; i++)
         {
@@ -82,9 +82,9 @@ public class RagdollController : MonoBehaviour
         _abs = GetComponentsInChildren<RagdollJoint>().ToList();
         _size = _abs.Count;
         SetParents();
-#if UNITY_EDITOR
+#if UNITY_EDITOR && RECORD_ACTION
         _sw = new StreamWriter("actionOutput.txt");
-#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR && RECORD_ACTION
     }
 
     private void SetParents()
@@ -106,10 +106,10 @@ public class RagdollController : MonoBehaviour
         _abs[15].SetRootAndParent(_abs[0], _abs[14]);
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR && RECORD_ACTION
     private void OnDestroy()
     {
         _sw.Close();
     }
-#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR && RECORD_ACTION
 }
