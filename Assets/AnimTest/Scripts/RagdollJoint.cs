@@ -16,6 +16,9 @@ public class RagdollJoint : MonoBehaviour
     private Quaternion tPoseRotation;
     private Quaternion tPoseLocalRotation;
 
+    public float stiffness;
+    public float damping;
+
 
     public void SetRootAndParent(RagdollJoint root, RagdollJoint parent)
     {
@@ -111,6 +114,8 @@ public class RagdollJoint : MonoBehaviour
         var range = upper - lower;
         var target = lower + (t + 1) / 2 * range;
         drive.target = target;
+        drive.stiffness = stiffness;
+        drive.damping = damping;
         return drive;
     }
 

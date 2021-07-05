@@ -8,6 +8,9 @@ using UnityEngine.Assertions;
 
 public class RagdollController : MonoBehaviour
 {
+    public float allStiffness;
+    public float allDamping;
+
     private List<RagdollJoint> _joints;
     private int _size = 0;
     private float[] _lastActionsArray;
@@ -27,6 +30,8 @@ public class RagdollController : MonoBehaviour
 
         for (var i = 0; i < _size; ++i)
         {
+            _joints[i].stiffness = allStiffness;
+            _joints[i].damping = allDamping;
             _joints[i].SetTargetJoint(skeleton.joints[i]);
             _joints[i].ResetJoint(skeleton.joints[0].rotation);
         }
