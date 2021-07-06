@@ -70,11 +70,12 @@ public class RagdollJoint : MonoBehaviour
 
     private void AddRelativeTorque(Vector3 v)
     {
-        v.Scale(powerVector);
-        _ab.AddRelativeTorque(new Vector3(
+        var exaggeratedVector = new Vector3(
             v.x * v.x * v.x * v.x * v.x,
             v.y * v.y * v.y * v.y * v.y,
-            v.z * v.z * v.z * v.z * v.z));
+            v.z * v.z * v.z * v.z * v.z);
+        exaggeratedVector.Scale(powerVector);
+        _ab.AddRelativeTorque(exaggeratedVector);
     }
 
     public void AddRelativeTorque(float x, float y, float z)

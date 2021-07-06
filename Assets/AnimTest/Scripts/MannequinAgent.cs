@@ -295,7 +295,7 @@ public class MannequinAgent : Agent
         comReward = Mathf.Exp(comReward * -200);
 
 #if UNITY_EDITOR
-        print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
+        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
         var totalReward = (posReward + rotReward + velReward + comReward) / 4f - 0.1f;
