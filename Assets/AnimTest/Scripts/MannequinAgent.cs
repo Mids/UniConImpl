@@ -95,8 +95,8 @@ public class MannequinAgent : Agent
 #endif // UNITY_EDITOR
 
         // TODO: RSI
-        // _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex));
-        _initFrame = 0;
+        _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex) / 2);
+        // _initFrame = 0;
         _initTime = _initFrame / fps;
         _currentFrame = _initFrame;
 

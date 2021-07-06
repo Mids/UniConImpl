@@ -80,19 +80,19 @@ public class RagdollJoint : MonoBehaviour
     public void AddRelativeTorque(float x, float y, float z)
     {
         Assert.AreEqual(_ab.dofCount, 3);
-        // AddRelativeTorque(new Vector3(x, y, z));
+        AddRelativeTorque(new Vector3(x, y, z));
 
-        _ab.xDrive = SetTarget(_ab.xDrive, x);
-        _ab.yDrive = SetTarget(_ab.yDrive, y);
-        _ab.zDrive = SetTarget(_ab.zDrive, z);
+        // _ab.xDrive = SetTarget(_ab.xDrive, x);
+        // _ab.yDrive = SetTarget(_ab.yDrive, y);
+        // _ab.zDrive = SetTarget(_ab.zDrive, z);
     }
 
     public void AddRelativeTorque(float z)
     {
         Assert.AreEqual(_ab.dofCount, 1);
-        // AddRelativeTorque(new Vector3(0, 0, z));
+        AddRelativeTorque(new Vector3(0, 0, z));
 
-        _ab.zDrive = SetTarget(_ab.zDrive, z);
+        // _ab.zDrive = SetTarget(_ab.zDrive, z);
     }
 
     private ArticulationDrive SetTarget(ArticulationDrive drive, float t)
