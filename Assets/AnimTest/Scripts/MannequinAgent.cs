@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using TMPro;
 using Unity.MLAgents;
@@ -182,7 +181,7 @@ public class MannequinAgent : Agent
         _currentFrame = curFrame;
 
         var forcePenalty = ragdollController.OnActionReceived(actions.ContinuousActions.Array);
-        
+
         SetReward(0);
         AddTargetStateReward();
         AddReward((0.5f - forcePenalty) / 10);
@@ -195,7 +194,7 @@ public class MannequinAgent : Agent
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         for (var index = 0; index < actionsOut.ContinuousActions.Array.Length; index++)
-            actionsOut.ContinuousActions.Array[index] = Random.Range(-1f, 1f);
+            actionsOut.ContinuousActions.Array[index] = Random.Range(-0f, 0f);
     }
 
 
@@ -284,7 +283,7 @@ public class MannequinAgent : Agent
 #endif
 
         posReward += totalJointPosReward / 32f;
-        rotReward += totalJointRotReward / 16f;
+        // rotReward += totalJointRotReward / 16f;
         velReward += totalJointVelReward / 16f;
         avReward += totalJointAvReward / 16f;
 
@@ -299,7 +298,7 @@ public class MannequinAgent : Agent
         print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2 + comReward) / 4f - 0.1f;
+        var totalReward = (posReward + rotReward + velReward + comReward) / 4f - 0.1f;
 
         if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
         {

@@ -13,8 +13,6 @@ public class RagdollJoint : MonoBehaviour
     private RagdollJoint _parent;
     private readonly List<RagdollJoint> _children = new List<RagdollJoint>();
     private bool _isRoot = false;
-    private Quaternion tPoseRotation;
-    private Quaternion tPoseLocalRotation;
 
     public float stiffness;
     public float damping;
@@ -30,9 +28,6 @@ public class RagdollJoint : MonoBehaviour
         var pc = _parent.GetComponent<Collider>();
         if (c != default && pc != default)
             Physics.IgnoreCollision(c, pc);
-
-        tPoseRotation = transform.rotation;
-        tPoseLocalRotation = Quaternion.Inverse(_parent.transform.rotation) * tPoseRotation;
     }
 
     public void SetTargetJoint(JointData data)
@@ -48,22 +43,15 @@ public class RagdollJoint : MonoBehaviour
         }
         else
         {
-            // var newRot = _initRootRotation * _initPose.joints[i].rotation;
-            // var localRot = Quaternion.Inverse(_initRotations[i]) * newRot;
-            // var euler = localRot.eulerAngles * Mathf.PI / 180f;
-
-            var newRot = rootRot * targetJointData.rotation;
-            var parentRot = rootRot * _parent.targetJointData.rotation;
-
             var localTargetRot = Quaternion.Inverse(_parent.targetJointData.rotation) * targetJointData.rotation;
             if (_parent._isRoot)
                 localTargetRot = targetJointData.rotation;
 
-            var localDiff = Quaternion.Inverse(tPoseLocalRotation) * localTargetRot;
-            var euler = localDiff.eulerAngles * Mathf.PI / 180f;
-            var x = euler.x > Mathf.PI ? euler.x - 2 * Mathf.PI : euler.x;
-            var y = euler.y > Mathf.PI ? euler.y - 2 * Mathf.PI : euler.y;
-            var z = euler.z > Mathf.PI ? euler.z - 2 * Mathf.PI : euler.z;
+            var localDiff = (Quaternion.Inverse(_ab.parentAnchorRotation) * localTargetRot).eulerAngles;
+
+            var x = Mathf.DeltaAngle(0, localDiff.x) * Mathf.PI / 180f;
+            var y = Mathf.DeltaAngle(0, localDiff.y) * Mathf.PI / 180f;
+            var z = Mathf.DeltaAngle(0, localDiff.z) * Mathf.PI / 180f;
 
             if (dofCount == 3)
                 _ab.jointPosition = new ArticulationReducedSpace(x, y, z);
