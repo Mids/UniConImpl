@@ -101,7 +101,7 @@ public class MannequinAgent : Agent
         _currentFrame = _initFrame;
 
         _initPose = currentMotion.data[_currentFrame];
-        _initRootPosition = transform.position + new Vector3(0, 0.8f, 0);
+        _initRootPosition = transform.position + _initPose.joints[0].position;
         _initRootRotation = _initPose.joints[0].rotation;
         _initRootRotationInv = Quaternion.Inverse(_initRootRotation);
 
@@ -129,11 +129,14 @@ public class MannequinAgent : Agent
         var jointNum = AgentABs.Count;
         var rootAB = AgentABs[0];
         var root = AgentTransforms[0];
-        var rootRot = root.localRotation;
+        var rootParent = root.parent;
+        var parentRot = rootParent.rotation;
+        var rootPos = rootParent.localPosition + parentRot * root.localPosition;
+        var rootRot = parentRot * root.localRotation;
         var rootInv = Quaternion.Inverse(rootRot);
 
         // Current State (16 * 13) = 208
-        sensor.AddObservation(root.localPosition);
+        sensor.AddObservation(rootPos);
         sensor.AddObservation(rootRot);
         sensor.AddObservation(rootAB.velocity);
         sensor.AddObservation(rootAB.angularVelocity);

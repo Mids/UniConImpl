@@ -39,7 +39,7 @@ public class RagdollJoint : MonoBehaviour
     {
         if (_isRoot)
         {
-            _ab.TeleportRoot(transform.parent.position, targetJointData.rotation);
+            _ab.TeleportRoot(transform.parent.parent.position + targetJointData.position, targetJointData.rotation);
         }
         else
         {
