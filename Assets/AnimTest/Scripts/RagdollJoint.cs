@@ -17,6 +17,8 @@ public class RagdollJoint : MonoBehaviour
     public float stiffness;
     public float damping;
 
+    public bool isManual = false;
+    public Vector3 manualPDTarget = Vector3.zero;
 
     public void SetRootAndParent(RagdollJoint root, RagdollJoint parent)
     {
@@ -82,18 +84,67 @@ public class RagdollJoint : MonoBehaviour
     {
         Assert.AreEqual(_ab.dofCount, 3);
         AddRelativeTorque(new Vector3(x, y, z));
-
-        // _ab.xDrive = SetTarget(_ab.xDrive, x);
-        // _ab.yDrive = SetTarget(_ab.yDrive, y);
-        // _ab.zDrive = SetTarget(_ab.zDrive, z);
     }
 
     public void AddRelativeTorque(float z)
     {
         Assert.AreEqual(_ab.dofCount, 1);
         AddRelativeTorque(new Vector3(0, 0, z));
+    }
 
-        // _ab.zDrive = SetTarget(_ab.zDrive, z);
+    public void SetPDTarget()
+    {
+        if (_isRoot) return;
+        
+        var localTargetRot = Quaternion.Inverse(_parent.targetJointData.rotation) * targetJointData.rotation;
+        if (_parent._isRoot)
+            localTargetRot = targetJointData.rotation;
+
+        var localDiff = (Quaternion.Inverse(_ab.parentAnchorRotation) * localTargetRot).eulerAngles;
+
+        if (isManual)
+        {
+            localDiff = manualPDTarget;
+        }
+        else
+        {
+            manualPDTarget = localDiff;
+        }
+        
+        var x = Mathf.DeltaAngle(0, localDiff.x);// * Mathf.PI / 180f;
+        var y = Mathf.DeltaAngle(0, localDiff.y);// * Mathf.PI / 180f;
+        var z = Mathf.DeltaAngle(0, localDiff.z);// * Mathf.PI / 180f;
+
+        if (_ab.twistLock != ArticulationDofLock.LockedMotion)
+        {
+            var drive = _ab.xDrive;
+            drive.target = x;
+            // drive.lowerLimit = -180f;
+            // drive.upperLimit = 180f;
+            drive.stiffness = 500;
+            drive.damping = 10;
+            _ab.xDrive = drive;
+        }
+        if (_ab.swingYLock != ArticulationDofLock.LockedMotion)
+        {
+            var drive = _ab.yDrive;
+            drive.target = y;
+            // drive.lowerLimit = -180f;
+            // drive.upperLimit = 180f;
+            drive.stiffness = 500;
+            drive.damping = 10;
+            _ab.yDrive = drive;
+        }
+        if (_ab.swingZLock != ArticulationDofLock.LockedMotion)
+        {
+            var drive = _ab.zDrive;
+            drive.target = z;
+            // drive.lowerLimit = -180f;
+            // drive.upperLimit = 180f;
+            drive.stiffness = 500;
+            drive.damping = 10;
+            _ab.zDrive = drive;
+        }
     }
 
     private ArticulationDrive SetTarget(ArticulationDrive drive, float t)

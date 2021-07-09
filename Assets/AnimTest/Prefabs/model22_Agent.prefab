@@ -89,6 +89,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &705669366584428049
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -116,7 +118,7 @@ ArticulationBody:
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0, w: 1}
   m_ComputeParentAnchor: 1
-  m_ArticulationJointType: 3
+  m_ArticulationJointType: 0
   m_LinearX: 2
   m_LinearY: 2
   m_LinearZ: 2
@@ -177,6 +179,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &6427292786427469906
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -266,6 +270,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!95 &8089310497301422408
 Animator:
   serializedVersion: 3
@@ -373,6 +379,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &1734542512900889913
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -400,12 +408,12 @@ ArticulationBody:
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0, w: 1}
   m_ComputeParentAnchor: 1
-  m_ArticulationJointType: 3
+  m_ArticulationJointType: 0
   m_LinearX: 2
   m_LinearY: 2
   m_LinearZ: 2
-  m_SwingY: 1
-  m_SwingZ: 1
+  m_SwingY: 0
+  m_SwingZ: 0
   m_Twist: 1
   m_XDrive:
     lowerLimit: -90
@@ -461,6 +469,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &1407534961867765202
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -549,6 +559,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &2041141312210111967
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -637,6 +649,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &9042451403874776415
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -725,6 +739,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &1738965246469308171
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -814,6 +830,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &1888134529860414081
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -903,6 +921,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!1 &6645180812271281555
 GameObject:
   m_ObjectHideFlags: 0
@@ -1160,6 +1180,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!171741748 &5611903420634375669
 ArticulationBody:
   m_ObjectHideFlags: 0
@@ -1235,6 +1257,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &1045962368946379565
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1323,6 +1347,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &3901183673992933796
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1411,6 +1437,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!65 &3504943922252568386
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1499,6 +1527,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!1 &8266867542014479682
 GameObject:
   m_ObjectHideFlags: 0
@@ -1709,6 +1739,8 @@ MonoBehaviour:
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
   damping: 0
+  isManual: 0
+  manualPDTarget: {x: 0, y: 0, z: 0}
 --- !u!1001 &4377727396710384187
 PrefabInstance:
   m_ObjectHideFlags: 0

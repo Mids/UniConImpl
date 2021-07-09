@@ -11,6 +11,9 @@ public class TrainingArea : MonoBehaviour
 
     public MotionData[] motions;
 
+    public bool isManualMotion = false;
+    public MotionData manualMotion;
+
     // Start is called before the first frame update
     private void Start()
     {
@@ -44,6 +47,9 @@ public class TrainingArea : MonoBehaviour
 
     public MotionData GetMotion(int index)
     {
+        if (isManualMotion && manualMotion != default)
+            return manualMotion;
+
         return motions[index];
     }
 

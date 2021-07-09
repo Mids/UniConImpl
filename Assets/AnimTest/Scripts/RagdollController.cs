@@ -37,6 +37,15 @@ public class RagdollController : MonoBehaviour
         }
     }
 
+    public void SetPDTarget(SkeletonData skeleton)
+    {
+        for (var i = 0; i < _joints.Count; i++)
+        {
+            _joints[i].SetTargetJoint(skeleton.joints[i]);
+            _joints[i].SetPDTarget();
+        }
+    }
+
     public float OnActionReceived(float[] actionsArray)
     {
         var forcePenalty = 0f;
