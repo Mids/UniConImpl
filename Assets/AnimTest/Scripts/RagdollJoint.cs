@@ -56,9 +56,15 @@ public class RagdollJoint : MonoBehaviour
             var z = Mathf.DeltaAngle(0, localDiff.z) * Mathf.PI / 180f;
 
             if (dofCount == 3)
+            {
                 _ab.jointPosition = new ArticulationReducedSpace(x, y, z);
+                _ab.jointVelocity = new ArticulationReducedSpace(0, 0, 0);
+            }
             else if (dofCount == 1)
+            {
                 _ab.jointPosition = new ArticulationReducedSpace(z);
+                _ab.jointVelocity = new ArticulationReducedSpace(0);
+            }
         }
 
         _ab.velocity = rootRot * targetJointData.velocity;
@@ -72,6 +78,12 @@ public class RagdollJoint : MonoBehaviour
 
     private void AddRelativeTorque(Vector3 v)
     {
+        if (isManual)
+        {
+            SetPDTarget();
+            return;
+        }
+
         var exaggeratedVector = new Vector3(
             v.x * v.x * v.x * v.x * v.x,
             v.y * v.y * v.y * v.y * v.y,
@@ -95,7 +107,7 @@ public class RagdollJoint : MonoBehaviour
     public void SetPDTarget()
     {
         if (_isRoot) return;
-        
+
         var localTargetRot = Quaternion.Inverse(_parent.targetJointData.rotation) * targetJointData.rotation;
         if (_parent._isRoot)
             localTargetRot = targetJointData.rotation;
@@ -103,17 +115,13 @@ public class RagdollJoint : MonoBehaviour
         var localDiff = (Quaternion.Inverse(_ab.parentAnchorRotation) * localTargetRot).eulerAngles;
 
         if (isManual)
-        {
             localDiff = manualPDTarget;
-        }
         else
-        {
             manualPDTarget = localDiff;
-        }
-        
-        var x = Mathf.DeltaAngle(0, localDiff.x);// * Mathf.PI / 180f;
-        var y = Mathf.DeltaAngle(0, localDiff.y);// * Mathf.PI / 180f;
-        var z = Mathf.DeltaAngle(0, localDiff.z);// * Mathf.PI / 180f;
+
+        var x = Mathf.DeltaAngle(0, localDiff.x); // * Mathf.PI / 180f;
+        var y = Mathf.DeltaAngle(0, localDiff.y); // * Mathf.PI / 180f;
+        var z = Mathf.DeltaAngle(0, localDiff.z); // * Mathf.PI / 180f;
 
         if (_ab.twistLock != ArticulationDofLock.LockedMotion)
         {
@@ -125,6 +133,7 @@ public class RagdollJoint : MonoBehaviour
             drive.damping = 10;
             _ab.xDrive = drive;
         }
+
         if (_ab.swingYLock != ArticulationDofLock.LockedMotion)
         {
             var drive = _ab.yDrive;
@@ -135,6 +144,7 @@ public class RagdollJoint : MonoBehaviour
             drive.damping = 10;
             _ab.yDrive = drive;
         }
+
         if (_ab.swingZLock != ArticulationDofLock.LockedMotion)
         {
             var drive = _ab.zDrive;
