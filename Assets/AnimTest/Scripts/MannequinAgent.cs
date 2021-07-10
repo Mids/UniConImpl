@@ -301,7 +301,7 @@ public class MannequinAgent : Agent
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward + velReward + comReward) / 4f - 0.1f;
+        var totalReward = (posReward + rotReward/4 + velReward/2 + comReward/4) / 2f - 0.1f;
 
         if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
         {
