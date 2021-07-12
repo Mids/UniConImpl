@@ -57,8 +57,8 @@ public class TestAgent : Agent
 
         for (int i = 0; i < arr.Length; i++) arr[i] *= power;
 
-        AgentABs[1].AddRelativeTorque(new Vector3(0, arr[0], arr[1]));
-        AgentABs[2].AddRelativeTorque(new Vector3(0, arr[2], arr[3]));
+        AgentABs[1].AddRelativeTorque(new Vector3(0, -arr[0], -arr[1]));
+        AgentABs[2].AddRelativeTorque(new Vector3(0, arr[0], arr[1]));
 
 
         var curHigh = AgentABs[0].transform.position.y;
