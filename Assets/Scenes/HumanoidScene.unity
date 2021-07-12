@@ -131,6 +131,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -8789522655144303097, guid: 4d98cf8e6286f05489639915e7ce8e54,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 558297409, guid: 4d98cf8e6286f05489639915e7ce8e54, type: 3}
       propertyPath: m_LocalScale.x
       value: 15
@@ -474,6 +479,26 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 15.460001, y: -158.533, z: 2.158}
+--- !u!1 &952210910 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8880660567128800043, guid: 4d98cf8e6286f05489639915e7ce8e54,
+    type: 3}
+  m_PrefabInstance: {fileID: 504692756}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &952210911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 952210910}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 733294477468d4d4f8576b35f087cf07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testAgentPrefab: {fileID: 8970670828113901616, guid: 837369c95568c7f4491b91acb1c601d7,
+    type: 3}
 --- !u!1 &1456949090
 GameObject:
   m_ObjectHideFlags: 0

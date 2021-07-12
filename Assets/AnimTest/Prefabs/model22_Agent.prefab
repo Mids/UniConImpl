@@ -1583,10 +1583,10 @@ MonoBehaviour:
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 48b88cb0e6244e74981071056cbebb03, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: a2be4c6acd36ebc48a6f7a388dd62217, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: AnimTest
+  m_BehaviorName: AnimTestttt
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1
