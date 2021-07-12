@@ -26,19 +26,29 @@ public class TestAgent : Agent
     {
         AgentABs[0].TeleportRoot(transform.position + new Vector3(0f, 4.5f, 0f), Quaternion.identity);
         AgentABs[1].jointPosition = new ArticulationReducedSpace(0, 0);
+        AgentABs[1].jointVelocity = new ArticulationReducedSpace(0, 0);
         AgentABs[2].jointPosition = new ArticulationReducedSpace(0, 0);
+        AgentABs[2].jointVelocity = new ArticulationReducedSpace(0, 0);
+
+
+        foreach (var agentAB in AgentABs)
+        {
+            agentAB.velocity = Vector3.zero;
+            agentAB.angularVelocity = Vector3.zero;
+        }
 
         highest = 4.5f;
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(AgentABs[0].transform.localPosition);
-        sensor.AddObservation(AgentABs[0].transform.localRotation);
-        sensor.AddObservation(AgentABs[1].transform.localPosition);
-        sensor.AddObservation(AgentABs[1].transform.localRotation);
-        sensor.AddObservation(AgentABs[2].transform.localPosition);
-        sensor.AddObservation(AgentABs[2].transform.localRotation);
+        foreach (var agentAB in AgentABs)
+        {
+            sensor.AddObservation(agentAB.transform.localPosition);
+            sensor.AddObservation(agentAB.transform.localRotation);
+            sensor.AddObservation(agentAB.velocity);
+            sensor.AddObservation(agentAB.angularVelocity);
+        }
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -54,7 +64,7 @@ public class TestAgent : Agent
         var curHigh = AgentABs[0].transform.position.y;
         if (curHigh > highest)
         {
-            AddReward(curHigh * curHigh - highest * highest);
+            AddReward(curHigh - highest);
             highest = curHigh;
         }
 
