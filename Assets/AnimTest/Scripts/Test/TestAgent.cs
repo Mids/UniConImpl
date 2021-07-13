@@ -11,7 +11,7 @@ public class TestAgent : Agent
 {
     private List<ArticulationBody> AgentABs;
 
-    public int power = 100;
+    public int power = 1000;
 
     private float highest;
 
@@ -57,8 +57,11 @@ public class TestAgent : Agent
 
         for (int i = 0; i < arr.Length; i++) arr[i] *= power;
 
-        AgentABs[1].AddRelativeTorque(new Vector3(0, -arr[0], -arr[1]));
-        AgentABs[2].AddRelativeTorque(new Vector3(0, arr[0], arr[1]));
+        var localTorque1 = AgentABs[1].parentAnchorRotation * new Vector3(0f, arr[0], arr[1]);
+        AgentABs[1].AddRelativeTorque(localTorque1);
+
+        var localTorque2 = AgentABs[2].parentAnchorRotation * new Vector3(0f, arr[2], arr[3]);
+        AgentABs[2].AddRelativeTorque(localTorque2);
 
 
         var curHigh = AgentABs[0].transform.position.y;
@@ -77,7 +80,6 @@ public class TestAgent : Agent
 
         AddReward(0.01f);
     }
-
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
