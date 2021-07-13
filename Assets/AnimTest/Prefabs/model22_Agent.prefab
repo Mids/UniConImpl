@@ -1586,7 +1586,7 @@ MonoBehaviour:
   m_Model: {fileID: 5022602860645237092, guid: a2be4c6acd36ebc48a6f7a388dd62217, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: AnimTestttt
+  m_BehaviorName: AnimTest
   TeamId: 0
   m_UseChildSensors: 1
   m_UseChildActuators: 1

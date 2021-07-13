@@ -68,7 +68,7 @@ public class TestAgent : Agent
             highest = curHigh;
         }
 
-        if (AgentABs[0].transform.position.y < 0.75f || AgentABs[1].transform.position.y < 0.75f)
+        if (AgentABs[0].transform.position.y < 0.85f || AgentABs[1].transform.position.y < 0.85f)
         {
             AddReward(-1f);
             EndEpisode();
