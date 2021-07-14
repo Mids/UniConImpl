@@ -24,12 +24,13 @@ public class TestAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        AgentABs[0].TeleportRoot(transform.position + new Vector3(0f, 4.5f, 0f), Quaternion.identity);
+        AgentABs[0].TeleportRoot(transform.position + new Vector3(0f, 6.5f, 0f), Quaternion.identity);
         AgentABs[1].jointPosition = new ArticulationReducedSpace(0, 0);
         AgentABs[1].jointVelocity = new ArticulationReducedSpace(0, 0);
         AgentABs[2].jointPosition = new ArticulationReducedSpace(0, 0);
         AgentABs[2].jointVelocity = new ArticulationReducedSpace(0, 0);
-
+        AgentABs[3].jointPosition = new ArticulationReducedSpace(0, 0);
+        AgentABs[3].jointVelocity = new ArticulationReducedSpace(0, 0);
 
         foreach (var agentAB in AgentABs)
         {
@@ -37,7 +38,7 @@ public class TestAgent : Agent
             agentAB.angularVelocity = Vector3.zero;
         }
 
-        highest = 4.5f;
+        highest = 6.5f;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -57,11 +58,15 @@ public class TestAgent : Agent
 
         for (int i = 0; i < arr.Length; i++) arr[i] *= power;
 
-        var localTorque1 = AgentABs[1].parentAnchorRotation * new Vector3(0f, arr[0], arr[1]);
-        AgentABs[1].AddRelativeTorque(localTorque1);
+        var localTorque1 = AgentABs[2].parentAnchorRotation * new Vector3(0f, arr[0], arr[1]);
+        var worldTorque1 = Quaternion.Inverse(AgentABs[2].transform.rotation) * localTorque1;
+        AgentABs[1].AddTorque(-worldTorque1);
+        AgentABs[2].AddTorque(worldTorque1);
 
-        var localTorque2 = AgentABs[2].parentAnchorRotation * new Vector3(0f, arr[2], arr[3]);
-        AgentABs[2].AddRelativeTorque(localTorque2);
+        var localTorque2 = AgentABs[3].parentAnchorRotation * new Vector3(0f, arr[2], arr[3]);
+        var worldTorque2 = Quaternion.Inverse(AgentABs[3].transform.rotation) * localTorque2;
+        AgentABs[2].AddTorque(-worldTorque2);
+        AgentABs[3].AddTorque(worldTorque2);
 
 
         var curHigh = AgentABs[0].transform.position.y;
