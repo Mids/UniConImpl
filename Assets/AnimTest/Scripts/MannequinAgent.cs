@@ -44,19 +44,12 @@ public class MannequinAgent : Agent
 
     public MotionData currentMotion;
     private SkeletonData _initPose;
-    private Vector3 _initRootPosition;
-    private Quaternion _initRootRotation;
-    private Quaternion _initRootRotationInv;
     public GameObject AgentMesh;
     public float fps = 30f;
 
     public List<Transform> AgentTransforms;
     public List<ArticulationBody> AgentABs;
     public RagdollController ragdollController;
-
-    public List<float> powerVector;
-
-    private Quaternion[] _initRotations;
 
     // public AnimationPlayer RefModel;
     // private Transform RefTransform;
@@ -74,7 +67,6 @@ public class MannequinAgent : Agent
 
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
-        _initRotations = AgentTransforms.Select(p => p.rotation).ToArray();
     }
 
     public override void OnEpisodeBegin()
@@ -101,9 +93,6 @@ public class MannequinAgent : Agent
         _currentFrame = _initFrame;
 
         _initPose = currentMotion.data[_currentFrame];
-        _initRootPosition = transform.position + _initPose.joints[0].position;
-        _initRootRotation = _initPose.joints[0].rotation;
-        _initRootRotationInv = Quaternion.Inverse(_initRootRotation);
 
         ResetAgentPose();
         StartCoroutine(WaitForInit());
@@ -112,6 +101,8 @@ public class MannequinAgent : Agent
     private IEnumerator WaitForInit()
     {
         yield return new WaitForEndOfFrame();
+        _episodeTime = 0f;
+        ragdollController.ResetRagdoll(_initPose);
         ragdollController.FreezeAll(false);
         _isInitialized = true;
     }
@@ -197,7 +188,7 @@ public class MannequinAgent : Agent
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         for (var index = 0; index < actionsOut.ContinuousActions.Array.Length; index++)
-            actionsOut.ContinuousActions.Array[index] = Random.Range(-0f, 0f);
+            actionsOut.ContinuousActions.Array[index] = Random.Range(-1f, 1f);
     }
 
 
@@ -301,7 +292,7 @@ public class MannequinAgent : Agent
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward/4 + velReward/2 + comReward/4) / 2f - 0.1f;
+        var totalReward = (posReward + rotReward / 4 + velReward / 2 + comReward / 4) / 2f - 0.1f;
 
         if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
         {
