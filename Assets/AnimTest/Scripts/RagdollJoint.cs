@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class RagdollJoint : MonoBehaviour
 {
     public int dofCount = 0;
-    public Vector3 powerVector = new Vector3(700, 700, 700);
+    public Vector3 powerVector = new Vector3(300, 300, 300);
     public JointData targetJointData;
     private ArticulationBody _ab;
     private RagdollJoint _root;
@@ -89,7 +89,11 @@ public class RagdollJoint : MonoBehaviour
             v.y * v.y * v.y * v.y * v.y,
             v.z * v.z * v.z * v.z * v.z);
         exaggeratedVector.Scale(powerVector);
-        _ab.AddRelativeTorque(exaggeratedVector);
+
+        var localTorque1 = _ab.parentAnchorRotation * exaggeratedVector;
+        var worldTorque1 = Quaternion.Inverse(_ab.transform.rotation) * localTorque1;
+        _parent._ab.AddTorque(-worldTorque1);
+        _ab.AddTorque(worldTorque1);
     }
 
     public void AddRelativeTorque(float x, float y, float z)
