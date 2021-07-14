@@ -1583,7 +1583,7 @@ MonoBehaviour:
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 63d4f35cd9436d64f94b2dab7510569a, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 6cbc130b53f2bda49926dcaf7a8a115d, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1649,8 +1649,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a310df83318a20c43aefe750978e0117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allStiffness: 300
-  allDamping: 10
+  allStiffness: 100
+  allDamping: 30
 --- !u!65 &4924488993747942950
 BoxCollider:
   m_ObjectHideFlags: 0
