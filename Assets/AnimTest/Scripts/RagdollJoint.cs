@@ -68,7 +68,8 @@ public class RagdollJoint : MonoBehaviour
         }
 
         _ab.velocity = rootRot * targetJointData.velocity;
-        _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+        _ab.angularVelocity = Vector3.zero;
+        // _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
     }
 
     public void Freeze(bool b)
@@ -83,11 +84,11 @@ public class RagdollJoint : MonoBehaviour
             SetPDTarget();
             return;
         }
-
-        var exaggeratedVector = new Vector3(
-            v.x * v.x * v.x,
-            v.y * v.y * v.y,
-            v.z * v.z * v.z);
+        var exaggeratedVector = v;
+        // var exaggeratedVector = new Vector3(
+        //     v.x * v.x * v.x,
+        //     v.y * v.y * v.y,
+        //     v.z * v.z * v.z);
         exaggeratedVector.Scale(powerVector);
 
         var localTorque1 = _ab.parentAnchorRotation * exaggeratedVector;

@@ -65,10 +65,10 @@ public class RagdollController : MonoBehaviour
             if (_lastActionsDiffArray[i] * diff < 0)
                 forcePenalty += diff * diff;
             _lastActionsDiffArray[i] = diff;
+            _lastActionsArray[i] = actionsArray[i];
         }
 
         forcePenalty /= actionsArrayLength;
-        actionsArray.CopyTo(_lastActionsArray, 0);
 
         // 3 * 10 + 1 * 4 = 34
         var actionIndex = 0;

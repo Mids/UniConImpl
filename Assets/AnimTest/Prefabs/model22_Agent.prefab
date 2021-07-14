@@ -1620,23 +1620,6 @@ MonoBehaviour:
   AgentTransforms: []
   AgentABs: []
   ragdollController: {fileID: 0}
-  powerVector:
-  - 0
-  - 700
-  - 500
-  - 300
-  - 700
-  - 500
-  - 300
-  - 700
-  - 700
-  - 300
-  - 200
-  - 100
-  - 100
-  - 300
-  - 200
-  - 100
 --- !u!114 &2668225794112271936
 MonoBehaviour:
   m_ObjectHideFlags: 0
