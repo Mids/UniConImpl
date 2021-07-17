@@ -29,6 +29,7 @@ public class MannequinAgent : Agent
     private float _lastReward = 0;
     private bool _isRewarded = false;
     private bool _isInitialized = false;
+    private const int AvThreshold = 20;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
 
@@ -129,7 +130,7 @@ public class MannequinAgent : Agent
         sensor.AddObservation(rootPos);
         sensor.AddObservation(rootRot);
         sensor.AddObservation(rootAB.velocity);
-        sensor.AddObservation(rootAB.angularVelocity);
+        sensor.AddObservation(rootAB.angularVelocity / 10);
 
         for (var index = 1; index < jointNum; index++)
         {
@@ -139,7 +140,11 @@ public class MannequinAgent : Agent
             sensor.AddObservation(rootInv * (jointT.position - root.position));
             sensor.AddObservation(rootInv * jointT.rotation);
             sensor.AddObservation(jointAB.velocity - rootAB.velocity);
-            sensor.AddObservation(jointAB.angularVelocity - rootAB.angularVelocity);
+            var angularVelocity = jointAB.angularVelocity - rootAB.angularVelocity;
+            sensor.AddObservation(angularVelocity / 10);
+
+            if (angularVelocity.magnitude > AvThreshold)
+                _isTerminated = true;
         }
 #if UNITY_EDITOR
         var currentPose = currentMotion.data[currentFrame];
@@ -161,7 +166,7 @@ public class MannequinAgent : Agent
                 sensor.AddObservation(joint.position);
                 sensor.AddObservation(joint.rotation);
                 sensor.AddObservation(joint.velocity);
-                sensor.AddObservation(joint.angularVelocity);
+                sensor.AddObservation(joint.angularVelocity / 10);
             }
         }
     }
