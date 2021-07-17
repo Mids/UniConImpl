@@ -84,6 +84,7 @@ public class RagdollJoint : MonoBehaviour
             SetPDTarget();
             return;
         }
+
         var exaggeratedVector = v;
         // var exaggeratedVector = new Vector3(
         //     v.x * v.x * v.x,
@@ -91,10 +92,10 @@ public class RagdollJoint : MonoBehaviour
         //     v.z * v.z * v.z);
         exaggeratedVector.Scale(powerVector);
 
-        var localTorque1 = _ab.parentAnchorRotation * exaggeratedVector;
-        var worldTorque1 = Quaternion.Inverse(_ab.transform.rotation) * localTorque1;
-        _parent._ab.AddTorque(-worldTorque1);
-        _ab.AddTorque(worldTorque1);
+        var localTorque = _ab.parentAnchorRotation * exaggeratedVector;
+        var worldTorque = Quaternion.Inverse(_ab.transform.rotation) * localTorque;
+        _parent._ab.AddTorque(-worldTorque);
+        _ab.AddTorque(worldTorque);
     }
 
     public void AddRelativeTorque(float x, float y, float z)

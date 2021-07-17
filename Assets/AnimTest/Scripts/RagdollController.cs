@@ -10,6 +10,7 @@ public class RagdollController : MonoBehaviour
 {
     public float allStiffness;
     public float allDamping;
+    public Vector3[] powerVectors;
 
     private List<RagdollJoint> _joints;
     private int _size = 0;
@@ -32,6 +33,7 @@ public class RagdollController : MonoBehaviour
         {
             _joints[i].stiffness = allStiffness;
             _joints[i].damping = allDamping;
+            _joints[i].powerVector = powerVectors[i];
             _joints[i].SetTargetJoint(skeleton.joints[i]);
             _joints[i].ResetJoint(skeleton.joints[0].rotation);
         }

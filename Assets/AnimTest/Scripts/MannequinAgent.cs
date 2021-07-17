@@ -30,17 +30,16 @@ public class MannequinAgent : Agent
     private bool _isRewarded = false;
     private bool _isInitialized = false;
 
-    public int targetStatesLength = 3;
     private static readonly int[] FrameOffset = {1, 4, 16};
 
 
-    public float rewardRootPos = 0.2f;
-    public float rewardRootRot = 0.2f;
-    public float rewardJointPos = 0.1f;
-    public float rewardJointRot = 0.4f;
-    public float rewardJointAngVel = 0.1f;
-
-    private Vector3 _prevCenterOfMass;
+    // public float rewardRootPos = 0.2f;
+    // public float rewardRootRot = 0.2f;
+    // public float rewardJointPos = 0.1f;
+    // public float rewardJointRot = 0.4f;
+    // public float rewardJointAngVel = 0.1f;
+    //
+    // private Vector3 _prevCenterOfMass;
 
     public MotionData currentMotion;
     private SkeletonData _initPose;
@@ -152,9 +151,9 @@ public class MannequinAgent : Agent
         // sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
 
         // Target State (16*13) * 3 = 624
-        for (var i = 0; i < targetStatesLength; ++i)
+        foreach (var offset in FrameOffset)
         {
-            var targetFrame = Mathf.Min(currentFrame + FrameOffset[i], currentMotion.data.Count - 1);
+            var targetFrame = Mathf.Min(currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
 
             foreach (var joint in targetPose.joints)
