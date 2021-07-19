@@ -43,6 +43,7 @@ public class MannequinAgent : Agent
     // private Vector3 _prevCenterOfMass;
 
     public MotionData currentMotion;
+    private SkeletonData currentPose => currentMotion.data[_currentFrame];
     private SkeletonData _initPose;
     public GameObject AgentMesh;
     public float fps = 30f;
@@ -74,7 +75,6 @@ public class MannequinAgent : Agent
         _isInitialized = false;
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
-        _currentFrame = -1;
 
 #if UNITY_EDITOR
         _lastReward = 0;
@@ -92,7 +92,7 @@ public class MannequinAgent : Agent
         _initTime = _initFrame / fps;
         _currentFrame = _initFrame;
 
-        _initPose = currentMotion.data[_currentFrame];
+        _initPose = currentPose;
 
         ResetAgentPose();
         StartCoroutine(WaitForInit());
@@ -104,6 +104,7 @@ public class MannequinAgent : Agent
         _episodeTime = 0f;
         ragdollController.ResetRagdoll(_initPose);
         ragdollController.FreezeAll(false);
+        RequestDecision();
         _isInitialized = true;
     }
 
@@ -116,7 +117,6 @@ public class MannequinAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         // 208+624 = 832
-        var currentFrame = _currentFrame;
         var jointNum = AgentABs.Count;
         var rootAB = AgentABs[0];
         var root = AgentTransforms[0];
@@ -147,7 +147,6 @@ public class MannequinAgent : Agent
                 _isTerminated = true;
         }
 #if UNITY_EDITOR
-        var currentPose = currentMotion.data[currentFrame];
         _RefAP.SetPose(currentPose);
 #endif // UNITY_EDITOR
 
@@ -158,7 +157,7 @@ public class MannequinAgent : Agent
         // Target State (16*13) * 3 = 624
         foreach (var offset in FrameOffset)
         {
-            var targetFrame = Mathf.Min(currentFrame + offset, currentMotion.data.Count - 1);
+            var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
 
             foreach (var joint in targetPose.joints)
@@ -173,11 +172,6 @@ public class MannequinAgent : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        _episodeTime += Time.fixedDeltaTime;
-        var animationTime = _initTime + _episodeTime;
-        var curFrame = (int) (animationTime * fps);
-        _currentFrame = curFrame;
-
         var forcePenalty = ragdollController.OnActionReceived(actions.ContinuousActions.Array);
 
         SetReward(0);
@@ -198,7 +192,7 @@ public class MannequinAgent : Agent
 
     public void AddTargetStateReward()
     {
-        var targetPose = currentMotion.data[_currentFrame];
+        var targetPose = currentPose;
 
         _isTerminated = false;
 
@@ -296,7 +290,7 @@ public class MannequinAgent : Agent
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward / 4 + velReward / 2 + comReward / 4) / 2f - 0.1f;
+        var totalReward = (posReward + rotReward / 2 + velReward / 2 + comReward / 2) / 3f - 0.1f;
 
         if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
         {
@@ -350,6 +344,16 @@ public class MannequinAgent : Agent
     {
         if (!_isInitialized) return;
 
-        RequestDecision();
+        _episodeTime += Time.fixedDeltaTime;
+        var animationTime = _initTime + _episodeTime;
+        var curFrame = (int) (animationTime * fps);
+
+        if (curFrame != _currentFrame)
+        {
+            _currentFrame = curFrame;
+            RequestDecision();
+        }
+
+        ragdollController.ApplyTorque();
     }
 }

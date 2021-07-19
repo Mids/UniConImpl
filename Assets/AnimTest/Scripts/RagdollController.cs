@@ -14,6 +14,7 @@ public class RagdollController : MonoBehaviour
 
     private List<RagdollJoint> _joints;
     private int _size = 0;
+    private float[] _savedActionsArray;
     private float[] _lastActionsArray;
     private float[] _lastActionsDiffArray;
 
@@ -23,6 +24,7 @@ public class RagdollController : MonoBehaviour
 
     public void ResetRagdoll(SkeletonData skeleton)
     {
+        _savedActionsArray = default;
         for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
         for (var i = 0; i < _lastActionsDiffArray?.Length; i++) _lastActionsDiffArray[i] = 0f;
 
@@ -52,6 +54,7 @@ public class RagdollController : MonoBehaviour
     {
         var forcePenalty = 0f;
         var actionsArrayLength = actionsArray.Length;
+        _savedActionsArray = actionsArray;
         _lastActionsArray ??= new float[actionsArrayLength];
         _lastActionsDiffArray ??= new float[actionsArrayLength];
 
@@ -72,6 +75,12 @@ public class RagdollController : MonoBehaviour
 
         forcePenalty /= actionsArrayLength;
 
+        return forcePenalty;
+    }
+
+    public void ApplyTorque()
+    {
+        if (_savedActionsArray == default) return;
         // 3 * 10 + 1 * 4 = 34
         var actionIndex = 0;
         foreach (var ab in _joints)
@@ -79,19 +88,17 @@ public class RagdollController : MonoBehaviour
             switch (ab.dofCount)
             {
                 case 1:
-                    ab.AddRelativeTorque(actionsArray[actionIndex]);
+                    ab.AddRelativeTorque(_savedActionsArray[actionIndex]);
                     break;
                 case 3:
-                    ab.AddRelativeTorque(actionsArray[actionIndex],
-                        actionsArray[actionIndex + 1],
-                        actionsArray[actionIndex + 2]);
+                    ab.AddRelativeTorque(_savedActionsArray[actionIndex],
+                        _savedActionsArray[actionIndex + 1],
+                        _savedActionsArray[actionIndex + 2]);
                     break;
             }
 
             actionIndex += ab.dofCount;
         }
-
-        return forcePenalty;
     }
 
     public void FreezeAll(bool b)
