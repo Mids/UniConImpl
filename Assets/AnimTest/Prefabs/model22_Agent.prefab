@@ -1584,7 +1584,7 @@ MonoBehaviour:
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 4b4cf6aaef7831c4ca3bc728c54beade, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: f0f4b48492281cb42960f632c0985170, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1631,20 +1631,20 @@ MonoBehaviour:
   allDamping: 30
   powerVectors:
   - {x: 0, y: 0, z: 0}
-  - {x: 400, y: 200, z: 400}
-  - {x: 0, y: 0, z: 400}
-  - {x: 200, y: 200, z: 200}
-  - {x: 400, y: 200, z: 400}
-  - {x: 0, y: 0, z: 400}
-  - {x: 200, y: 200, z: 200}
-  - {x: 300, y: 300, z: 300}
-  - {x: 300, y: 300, z: 300}
-  - {x: 300, y: 300, z: 300}
+  - {x: 300, y: 150, z: 200}
   - {x: 0, y: 0, z: 300}
+  - {x: 200, y: 200, z: 200}
+  - {x: 300, y: 150, z: 200}
+  - {x: 0, y: 0, z: 300}
+  - {x: 200, y: 200, z: 200}
+  - {x: 150, y: 150, z: 150}
+  - {x: 150, y: 150, z: 150}
+  - {x: 200, y: 200, z: 200}
+  - {x: 0, y: 0, z: 200}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
-  - {x: 300, y: 300, z: 300}
-  - {x: 0, y: 0, z: 300}
+  - {x: 200, y: 200, z: 200}
+  - {x: 0, y: 0, z: 200}
   - {x: 0, y: 0, z: 0}
 --- !u!114 &7312995275707545252
 MonoBehaviour:
