@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.MLAgents.Sensors;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -10,9 +11,17 @@ public class RagdollJoint : MonoBehaviour
     public JointData targetJointData;
     private ArticulationBody _ab;
     private RagdollJoint _root;
+    private Transform _rootTransform;
     private RagdollJoint _parent;
+    private Transform _parentTransform;
     private readonly List<RagdollJoint> _children = new List<RagdollJoint>();
+
     private bool _isRoot = false;
+    private static Vector3 _rootPos;
+    private static Quaternion _rootInv;
+    private static Vector3 _rootVelocity;
+    private static Vector3 _rootAngularVelocity;
+    private const int AvThreshold = 20;
 
     public float stiffness;
     public float damping;
@@ -23,8 +32,10 @@ public class RagdollJoint : MonoBehaviour
     public void SetRootAndParent(RagdollJoint root, RagdollJoint parent)
     {
         _root = root;
+        _rootTransform = root.transform;
         _parent = parent;
         _parent._children.Add(this);
+        _parentTransform = _parent.transform;
 
         var c = GetComponent<Collider>();
         var pc = _parent.GetComponent<Collider>();
@@ -49,20 +60,16 @@ public class RagdollJoint : MonoBehaviour
             if (_parent._isRoot)
                 localTargetRot = targetJointData.rotation;
 
-            var localDiff = (Quaternion.Inverse(_ab.parentAnchorRotation) * localTargetRot).eulerAngles;
-
-            var x = Mathf.DeltaAngle(0, localDiff.x) * Mathf.PI / 180f;
-            var y = Mathf.DeltaAngle(0, localDiff.y) * Mathf.PI / 180f;
-            var z = Mathf.DeltaAngle(0, localDiff.z) * Mathf.PI / 180f;
+            var rc = LocalToReducedCoordinate(localTargetRot);
 
             if (dofCount == 3)
             {
-                _ab.jointPosition = new ArticulationReducedSpace(x, y, z);
+                _ab.jointPosition = new ArticulationReducedSpace(rc.x, rc.y, rc.z);
                 _ab.jointVelocity = new ArticulationReducedSpace(0, 0, 0);
             }
             else if (dofCount == 1)
             {
-                _ab.jointPosition = new ArticulationReducedSpace(z);
+                _ab.jointPosition = new ArticulationReducedSpace(rc.z);
                 _ab.jointVelocity = new ArticulationReducedSpace(0);
             }
         }
@@ -72,9 +79,84 @@ public class RagdollJoint : MonoBehaviour
         // _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
     }
 
+    private Vector3 LocalToReducedCoordinate(Quaternion local)
+    {
+        Vector3 result;
+
+        var localDiff = (Quaternion.Inverse(_ab.parentAnchorRotation) * local).eulerAngles;
+
+        result.x = Mathf.DeltaAngle(0, localDiff.x);
+        result.y = Mathf.DeltaAngle(0, localDiff.y);
+        result.z = Mathf.DeltaAngle(0, localDiff.z);
+        result *= Mathf.Deg2Rad;
+
+        return result;
+    }
+
     public void Freeze(bool b)
     {
         _ab.immovable = b;
+    }
+
+    public bool OnCollectObservations(VectorSensor sensor)
+    {
+        var result = true;
+
+        var t = transform;
+        if (_isRoot)
+        {
+            var parent = t.parent;
+            var parentRot = parent.rotation;
+            var rootRot = parentRot * t.localRotation;
+
+            _rootPos = parent.localPosition + parentRot * t.localPosition;
+            _rootInv = Quaternion.Inverse(rootRot);
+            _rootVelocity = _ab.velocity;
+            _rootAngularVelocity = _ab.angularVelocity;
+
+            sensor.AddObservation(_rootPos.y);
+            sensor.AddObservation(rootRot);
+            sensor.AddObservation(_rootInv * _rootVelocity);
+            sensor.AddObservation(_rootAngularVelocity * Mathf.Deg2Rad);
+        }
+        else
+        {
+            var localRot = Quaternion.Inverse(_parentTransform.rotation) * t.rotation;
+            var v = _ab.velocity - _rootVelocity;
+            var av = _ab.angularVelocity - _rootAngularVelocity;
+
+            sensor.AddObservation(_rootInv * (t.position - _rootTransform.position));
+            sensor.AddObservation(LocalToReducedCoordinate(localRot));
+            sensor.AddObservation(_rootInv * v);
+            sensor.AddObservation(av * Mathf.Deg2Rad);
+
+            if (av.magnitude > AvThreshold) result = false;
+        }
+
+        return result;
+    }
+
+    public void AddTargetObservation(VectorSensor sensor, JointData target)
+    {
+        if (_isRoot)
+        {
+            sensor.AddObservation(target.position.y);
+            sensor.AddObservation(target.rotation);
+            sensor.AddObservation(target.velocity);
+            sensor.AddObservation(target.angularVelocity * Mathf.Deg2Rad);
+        }
+        else
+        {
+            sensor.AddObservation(target.position);
+
+            var localTargetRot = Quaternion.Inverse(_parent.targetJointData.rotation) * targetJointData.rotation;
+            if (_parent._isRoot)
+                localTargetRot = targetJointData.rotation;
+
+            sensor.AddObservation(LocalToReducedCoordinate(localTargetRot));
+            sensor.AddObservation(target.velocity);
+            sensor.AddObservation(target.angularVelocity * Mathf.Deg2Rad);
+        }
     }
 
     private void AddRelativeTorque(Vector3 v)

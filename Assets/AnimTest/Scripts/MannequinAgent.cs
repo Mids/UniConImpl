@@ -29,7 +29,6 @@ public class MannequinAgent : Agent
     private float _lastReward = 0;
     private bool _isRewarded = false;
     private bool _isInitialized = false;
-    private const int AvThreshold = 20;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
 
@@ -116,57 +115,18 @@ public class MannequinAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // 208+624 = 832
-        var jointNum = AgentABs.Count;
-        var rootAB = AgentABs[0];
-        var root = AgentTransforms[0];
-        var rootParent = root.parent;
-        var parentRot = rootParent.rotation;
-        var rootPos = rootParent.localPosition + parentRot * root.localPosition;
-        var rootRot = parentRot * root.localRotation;
-        var rootInv = Quaternion.Inverse(rootRot);
+        // 191 + 573 = 764
+        // Current State 11 + 180 = 191
+        if (!ragdollController.OnCollectObservations(sensor))
+            _isTerminated = true;
 
-        // Current State (16 * 13) = 208
-        sensor.AddObservation(rootPos);
-        sensor.AddObservation(rootRot);
-        sensor.AddObservation(rootAB.velocity);
-        sensor.AddObservation(rootAB.angularVelocity / 10);
-
-        for (var index = 1; index < jointNum; index++)
-        {
-            var jointAB = AgentABs[index];
-            var jointT = AgentTransforms[index];
-
-            sensor.AddObservation(rootInv * (jointT.position - root.position));
-            sensor.AddObservation(rootInv * jointT.rotation);
-            sensor.AddObservation(jointAB.velocity - rootAB.velocity);
-            var angularVelocity = jointAB.angularVelocity - rootAB.angularVelocity;
-            sensor.AddObservation(angularVelocity / 10);
-
-            if (angularVelocity.magnitude > AvThreshold)
-                _isTerminated = true;
-        }
-#if UNITY_EDITOR
-        _RefAP.SetPose(currentPose);
-#endif // UNITY_EDITOR
-
-
-        // Time to next frame (1)
-        // sensor.AddObservation(currentFrame + 1 - animationTime * 30f);
-
-        // Target State (16*13) * 3 = 624
+        // Target State (11 + 180) * 3 = 573
         foreach (var offset in FrameOffset)
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
 
-            foreach (var joint in targetPose.joints)
-            {
-                sensor.AddObservation(joint.position);
-                sensor.AddObservation(joint.rotation);
-                sensor.AddObservation(joint.velocity);
-                sensor.AddObservation(joint.angularVelocity / 10);
-            }
+            ragdollController.AddTargetObservation(sensor, targetPose);
         }
     }
 
@@ -196,17 +156,15 @@ public class MannequinAgent : Agent
 
         _isTerminated = false;
 
-        // 193 + 600 = 793
-
-        // TODO: Recalculate reward function
         var root = AgentTransforms[0];
         var rootAB = AgentABs[0];
-        var targetRoot = targetPose.joints[0];
         var rootParent = root.parent;
         var parentRot = rootParent.rotation;
         var rootPos = rootParent.localPosition + parentRot * root.localPosition;
         var rootRot = parentRot * root.localRotation;
         var rootInv = Quaternion.Inverse(rootRot);
+
+        var targetRoot = targetPose.joints[0];
 
         var posReward = rootPos.y - targetRoot.position.y;
         posReward *= posReward;
@@ -352,6 +310,10 @@ public class MannequinAgent : Agent
         {
             _currentFrame = curFrame;
             RequestDecision();
+
+#if UNITY_EDITOR
+            _RefAP.SetPose(currentPose);
+#endif // UNITY_EDITOR
         }
 
         ragdollController.ApplyTorque();

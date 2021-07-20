@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.MLAgents.Sensors;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -48,6 +49,23 @@ public class RagdollController : MonoBehaviour
             _joints[i].SetTargetJoint(skeleton.joints[i]);
             _joints[i].SetPDTarget();
         }
+    }
+
+    public bool OnCollectObservations(VectorSensor sensor)
+    {
+        var result = true;
+
+        foreach (var joint in _joints)
+            if (!joint.OnCollectObservations(sensor))
+                result = false;
+
+        return result;
+    }
+
+    public void AddTargetObservation(VectorSensor sensor, SkeletonData target)
+    {
+        for (var index = 0; index < _joints.Count; index++)
+            _joints[index].AddTargetObservation(sensor, target.joints[index]);
     }
 
     public float OnActionReceived(float[] actionsArray)
