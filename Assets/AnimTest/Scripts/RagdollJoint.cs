@@ -127,7 +127,10 @@ public class RagdollJoint : MonoBehaviour
             var rc = LocalToReducedCoordinate(localRot);
 
             sensor.AddObservation(_rootInv * (t.position - _rootTransform.position));
-            sensor.AddObservation(rc);
+            if (dofCount == 3)
+                sensor.AddObservation(rc);
+            else if (dofCount == 1)
+                sensor.AddObservation(rc.z);
             sensor.AddObservation(_rootInv * v);
             sensor.AddObservation(av * Mathf.Deg2Rad);
 
@@ -154,7 +157,11 @@ public class RagdollJoint : MonoBehaviour
             if (_parent._isRoot)
                 localTargetRot = targetJointData.rotation;
 
-            sensor.AddObservation(LocalToReducedCoordinate(localTargetRot));
+            if (dofCount == 3)
+                sensor.AddObservation(LocalToReducedCoordinate(localTargetRot));
+            else if (dofCount == 1)
+                sensor.AddObservation(LocalToReducedCoordinate(localTargetRot).z);
+
             sensor.AddObservation(target.velocity);
             sensor.AddObservation(target.angularVelocity * Mathf.Deg2Rad);
         }
