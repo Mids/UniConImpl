@@ -11,7 +11,7 @@ public class WeightVisualizer : MonoBehaviour
     private void Start()
     {
         _behaviorParameters = GetComponent<BehaviorParameters>();
-        var v = _behaviorParameters.Model.modelData;
+        // var v = _behaviorParameters.Model.modelData;
 
         
     }

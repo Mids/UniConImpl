@@ -124,9 +124,10 @@ public class RagdollJoint : MonoBehaviour
             var localRot = Quaternion.Inverse(_parentTransform.rotation) * t.rotation;
             var v = _ab.velocity - _rootVelocity;
             var av = _ab.angularVelocity - _rootAngularVelocity;
+            var rc = LocalToReducedCoordinate(localRot);
 
             sensor.AddObservation(_rootInv * (t.position - _rootTransform.position));
-            sensor.AddObservation(LocalToReducedCoordinate(localRot));
+            sensor.AddObservation(rc);
             sensor.AddObservation(_rootInv * v);
             sensor.AddObservation(av * Mathf.Deg2Rad);
 
@@ -168,16 +169,28 @@ public class RagdollJoint : MonoBehaviour
         }
 
         var exaggeratedVector = v;
-        // var exaggeratedVector = new Vector3(
-        //     v.x * v.x * v.x,
-        //     v.y * v.y * v.y,
-        //     v.z * v.z * v.z);
         exaggeratedVector.Scale(powerVector);
+        // v.Scale(powerVector / _ab.mass);
+        // v *= 10 / _ab.mass;
 
         var localTorque = _ab.parentAnchorRotation * exaggeratedVector;
         var worldTorque = Quaternion.Inverse(_ab.transform.rotation) * localTorque;
         _parent._ab.AddTorque(-worldTorque);
         _ab.AddTorque(worldTorque);
+
+        // var vel = _ab.jointVelocity;
+        // if (dofCount == 3)
+        // {
+        //     vel[0] += v.y;
+        //     vel[1] += v.z;
+        //     vel[2] += v.x;
+        // }
+        // else if (dofCount == 1)
+        // {
+        //     vel[0] += v.z;
+        // }
+        //
+        // _ab.jointVelocity = vel;
     }
 
     public void AddRelativeTorque(float x, float y, float z)

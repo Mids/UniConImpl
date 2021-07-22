@@ -224,6 +224,7 @@ public class MannequinAgent : Agent
 
         com /= totalMass;
         com -= targetPose.centerOfMass;
+        com.y = 0f;
         var comReward = com.sqrMagnitude;
 
 
