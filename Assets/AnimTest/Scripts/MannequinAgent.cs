@@ -233,7 +233,7 @@ public class MannequinAgent : Agent
         //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
 #endif
 
-        posReward += totalJointPosReward / 32f;
+        posReward += totalJointPosReward / 64f;
         // rotReward += totalJointRotReward / 16f;
         velReward += totalJointVelReward / 16f;
         avReward += totalJointAvReward / 16f;
@@ -249,9 +249,9 @@ public class MannequinAgent : Agent
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward / 2 + velReward / 2 + comReward / 2) / 3f - 0.1f;
+        var totalReward = (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1f;
 
-        if (totalReward < 0f || AgentTransforms[12].position.y < 0.3f)
+        if (totalReward < -0.8f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1;
