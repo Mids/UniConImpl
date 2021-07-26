@@ -249,25 +249,15 @@ public class MannequinAgent : Agent
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
 #endif
         // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-        var totalReward = (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1f;
 
-        if (totalReward < -0.8f || AgentTransforms[12].position.y < 0.3f)
-        {
+        var curHead = AgentTransforms[12].position - rootParent.parent.position;
+        var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
+        var distHead = (targetHead - curHead).magnitude;
+
+        if (distHead > 1f)
             _isTerminated = true;
-            totalReward = -1;
-        }
-        else
-        {
-            for (var index = 0; index < AgentTransforms.Count; index++)
-            {
-                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
-                    continue;
 
-                _isTerminated = true;
-                totalReward = -1;
-                break;
-            }
-        }
+        var totalReward = (1f - distHead) * (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1.05f;
 
         _isRewarded = true;
 
