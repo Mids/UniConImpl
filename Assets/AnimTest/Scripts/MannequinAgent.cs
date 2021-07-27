@@ -29,6 +29,7 @@ public class MannequinAgent : Agent
     private float _lastReward = 0;
     private bool _isRewarded = false;
     private bool _isInitialized = false;
+    private Vector3 _lastCOM = Vector3.zero;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
 
@@ -49,6 +50,7 @@ public class MannequinAgent : Agent
 
     public List<Transform> AgentTransforms;
     public List<ArticulationBody> AgentABs;
+    public List<FootContact> Feet;
     public RagdollController ragdollController;
 
     // public AnimationPlayer RefModel;
@@ -67,6 +69,7 @@ public class MannequinAgent : Agent
 
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
+        Feet = AgentMesh.GetComponentsInChildren<FootContact>().ToList();
     }
 
     public override void OnEpisodeBegin()
@@ -92,6 +95,8 @@ public class MannequinAgent : Agent
         _currentFrame = _initFrame;
 
         _initPose = currentPose;
+        Feet.ForEach(p => p.isContact = false);
+        _lastCOM = _initPose.joints[0].position + _initPose.centerOfMass;
 
         ResetAgentPose();
         StartCoroutine(WaitForInit());
@@ -212,21 +217,7 @@ public class MannequinAgent : Agent
             totalJointAvReward += jointAvReward;
         }
 
-
-        var com = Vector3.zero;
-        var totalMass = 0f;
-        foreach (var jointAB in AgentABs)
-        {
-            var mass = jointAB.mass;
-            com += (jointAB.worldCenterOfMass - root.position) * mass;
-            totalMass += mass;
-        }
-
-        com /= totalMass;
-        com -= targetPose.centerOfMass;
-        com.y = 0f;
-        var comReward = com.sqrMagnitude;
-
+        var comReward = GetComReward();
 
 #if UNITY_EDITOR
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n" +
@@ -239,11 +230,11 @@ public class MannequinAgent : Agent
         avReward += totalJointAvReward / 16f;
 
 
-        posReward = Mathf.Exp(posReward * -4);
-        rotReward = Mathf.Exp(rotReward / -4);
-        velReward = Mathf.Exp(velReward / -10);
-        avReward = Mathf.Exp(avReward / -20);
-        comReward = Mathf.Exp(comReward * -200);
+        posReward = Mathf.Exp(posReward * -4f);
+        rotReward = Mathf.Exp(rotReward / -4f);
+        velReward = Mathf.Exp(velReward / -10f);
+        avReward = Mathf.Exp(avReward / -20f);
+        comReward = Mathf.Exp(comReward * -1f);
 
 #if UNITY_EDITOR
         // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
@@ -257,7 +248,7 @@ public class MannequinAgent : Agent
         if (distHead > 1f)
             _isTerminated = true;
 
-        var totalReward = (1f - distHead) * (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1.05f;
+        var totalReward = comReward * (posReward + rotReward / 3 + velReward / 3 + (1f - distHead) / 3) - 1.05f;
 
         _isRewarded = true;
 
@@ -270,6 +261,89 @@ public class MannequinAgent : Agent
         }
 
         if (_isTerminated) EarlyTerminate();
+    }
+
+    private float GetComReward()
+    {
+        var root = AgentTransforms[0];
+        var rootParent = root.parent;
+        var parentRot = rootParent.rotation;
+        var rootPos = rootParent.localPosition + parentRot * root.localPosition;
+
+        var com = Vector3.zero;
+        var totalMass = 0f;
+        foreach (var jointAB in AgentABs)
+        {
+            var mass = jointAB.mass;
+            com += (jointAB.worldCenterOfMass - root.position) * mass;
+            totalMass += mass;
+        }
+
+        com /= totalMass;
+        com += rootPos;
+        var comDir = com - _lastCOM;
+        _lastCOM = com;
+        var projectedCom = com;
+        projectedCom.y = 0f;
+        comDir.y = 0f;
+
+        var lFootPos = Feet[0].transform.position;
+        lFootPos.y = 0;
+        var rFootPos = Feet[1].transform.position;
+        rFootPos.y = 0;
+        var lToePos = lFootPos + Feet[0].transform.rotation * new Vector3(0, 0.2f, 0);
+        lToePos.y = 0;
+        var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
+        rToePos.y = 0;
+        var comReward = 0f;
+
+        if (Feet[0].isContact && Feet[1].isContact)
+        {
+            var isIn = PointInTriangle(projectedCom, lFootPos, lToePos, rFootPos)
+                       || PointInTriangle(projectedCom, lFootPos, lToePos, rToePos)
+                       || PointInTriangle(projectedCom, lFootPos, rFootPos, rToePos)
+                       || PointInTriangle(projectedCom, lToePos, rFootPos, rToePos);
+            var centerPos = lFootPos + rFootPos + lToePos + rToePos;
+            centerPos /= 4f;
+            var centerDir = centerPos - projectedCom;
+            var angle = Vector3.Angle(comDir, centerDir);
+            if (!isIn && angle > 90f)
+                comReward = angle * Mathf.Deg2Rad;
+        }
+        else if (Feet[0].isContact)
+        {
+            var rFootVel = AgentABs[6].velocity;
+            rFootVel.y = 0;
+            var angle = Vector3.Angle(comDir, rFootVel);
+            comReward = angle * Mathf.Deg2Rad;
+        }
+        else if (Feet[1].isContact)
+        {
+            var lFootVel = AgentABs[3].velocity;
+            lFootVel.y = 0;
+            var angle = Vector3.Angle(comDir, lFootVel);
+            comReward = angle * Mathf.Deg2Rad;
+        }
+
+
+        return comReward;
+    }
+
+    private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
+    }
+
+    private static bool PointInTriangle(Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3)
+    {
+        var d1 = Sign(pt, v1, v2);
+        var d2 = Sign(pt, v2, v3);
+        var d3 = Sign(pt, v3, v1);
+
+        var hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+        var hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+
+        return !(hasNeg && hasPos);
     }
 
     private void EarlyTerminate()
