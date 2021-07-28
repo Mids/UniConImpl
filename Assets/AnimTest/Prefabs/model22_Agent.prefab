@@ -1605,12 +1605,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 704
+    VectorObservationSize: 696
     NumStackedVectorObservations: 1
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 15f3e728008a4f74d96673813f4890cd, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1634,8 +1634,6 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
-  cumulativeRewardText: {fileID: 5019323758798554383}
-  drawDebugLine: 1
   currentMotion: {fileID: 0}
   AgentMesh: {fileID: 3459228569474318186}
   fps: 30
@@ -1643,6 +1641,8 @@ MonoBehaviour:
   AgentABs: []
   Feet: []
   ragdollController: {fileID: 0}
+  cumulativeRewardText: {fileID: 5019323758798554383}
+  drawDebugLine: 1
 --- !u!114 &2668225794112271936
 MonoBehaviour:
   m_ObjectHideFlags: 0
