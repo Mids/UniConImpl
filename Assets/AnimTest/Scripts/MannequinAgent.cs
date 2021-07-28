@@ -45,6 +45,9 @@ public class MannequinAgent : Agent
     private float _lastReward = 0;
     private AnimationPlayer _RefAP;
 #endif // UNITY_EDITOR
+
+    #region ML-Agents
+
     public override void Initialize()
     {
         base.Initialize();
@@ -87,22 +90,6 @@ public class MannequinAgent : Agent
         StartCoroutine(WaitForInit());
     }
 
-    private IEnumerator WaitForInit()
-    {
-        yield return new WaitForEndOfFrame();
-        _episodeTime = 0f;
-        ragdollController.ResetRagdoll(_initPose);
-        ragdollController.FreezeAll(false);
-        RequestDecision();
-        _isInitialized = true;
-    }
-
-    private void ResetAgentPose()
-    {
-        ragdollController.FreezeAll(true);
-        ragdollController.ResetRagdoll(_initPose);
-    }
-
     public override void CollectObservations(VectorSensor sensor)
     {
         // 191 + 573 = 764
@@ -135,8 +122,26 @@ public class MannequinAgent : Agent
             actionsOut.ContinuousActions.Array[index] = Random.Range(-1f, 1f);
     }
 
+    #endregion
 
-    public void AddTargetStateReward()
+    private IEnumerator WaitForInit()
+    {
+        yield return new WaitForEndOfFrame();
+        _episodeTime = 0f;
+        ragdollController.ResetRagdoll(_initPose);
+        ragdollController.FreezeAll(false);
+        RequestDecision();
+        _isInitialized = true;
+    }
+
+    private void ResetAgentPose()
+    {
+        ragdollController.FreezeAll(true);
+        ragdollController.ResetRagdoll(_initPose);
+    }
+
+
+    private void AddTargetStateReward()
     {
         var targetPose = currentPose;
 
@@ -355,6 +360,8 @@ public class MannequinAgent : Agent
     }
 
 
+    #region DEBUG
+
 #if UNITY_EDITOR
 
     private void Update()
@@ -369,7 +376,7 @@ public class MannequinAgent : Agent
     {
         var delta = GetCumulativeReward() - _lastReward;
         if (delta == 0f) return;
-        
+
         cumulativeRewardText.text = delta.ToString("0.00");
         _lastReward = GetCumulativeReward();
     }
@@ -396,4 +403,6 @@ public class MannequinAgent : Agent
         Debug.DrawLine(rFootPos, rToePos, Feet[1].isContact ? Color.cyan : Color.red, 0f, false);
     }
 #endif // UNITY_EDITOR
+
+    #endregion
 }
