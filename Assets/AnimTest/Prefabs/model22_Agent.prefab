@@ -1322,6 +1322,19 @@ ArticulationBody:
   m_JointFriction: 0.05
   m_Immovable: 0
   m_UseGravity: 1
+--- !u!114 &3505700273198705366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7344831862335200265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df5d74724a2316479190f6373d5b15e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isContact: 0
 --- !u!114 &5335791502692391505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1349,19 +1362,6 @@ MonoBehaviour:
   damping: 0
   isManual: 0
   manualPDTarget: {x: 0, y: 0, z: 0}
---- !u!114 &3505700273198705366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7344831862335200265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8df5d74724a2316479190f6373d5b15e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isContact: 0
 --- !u!65 &3901183673992933796
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1425,6 +1425,19 @@ ArticulationBody:
   m_JointFriction: 0.05
   m_Immovable: 0
   m_UseGravity: 1
+--- !u!114 &4385925187216359231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7734766674636354874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df5d74724a2316479190f6373d5b15e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isContact: 0
 --- !u!114 &7275897056249038786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1452,19 +1465,6 @@ MonoBehaviour:
   damping: 0
   isManual: 0
   manualPDTarget: {x: 0, y: 0, z: 0}
---- !u!114 &4385925187216359231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7734766674636354874}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8df5d74724a2316479190f6373d5b15e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isContact: 0
 --- !u!65 &3504943922252568386
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1610,7 +1610,7 @@ MonoBehaviour:
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: bff7fe56cf5b2c843961a92508c0b843, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 15f3e728008a4f74d96673813f4890cd, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1635,11 +1635,13 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
   cumulativeRewardText: {fileID: 5019323758798554383}
+  drawDebugLine: 1
   currentMotion: {fileID: 0}
   AgentMesh: {fileID: 3459228569474318186}
   fps: 30
   AgentTransforms: []
   AgentABs: []
+  Feet: []
   ragdollController: {fileID: 0}
 --- !u!114 &2668225794112271936
 MonoBehaviour:

@@ -11,13 +11,8 @@ using UnityEngine;
 [RequireComponent(typeof(BehaviorParameters))]
 public class MannequinAgent : Agent
 {
-    public TextMeshPro cumulativeRewardText;
-
     private TrainingArea _trainingArea;
 
-#if UNITY_EDITOR
-    private AnimationPlayer _RefAP;
-#endif // UNITY_EDITOR
 
     private float _episodeTime = 0f;
     private float _initTime = 0f;
@@ -26,21 +21,10 @@ public class MannequinAgent : Agent
     private int _earlyTerminationStack = 0;
     private const int EarlyTerminationMax = 1;
     private int _currentFrame = -1;
-    private float _lastReward = 0;
-    private bool _isRewarded = false;
     private bool _isInitialized = false;
     private Vector3 _lastCOM = Vector3.zero;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
-
-
-    // public float rewardRootPos = 0.2f;
-    // public float rewardRootRot = 0.2f;
-    // public float rewardJointPos = 0.1f;
-    // public float rewardJointRot = 0.4f;
-    // public float rewardJointAngVel = 0.1f;
-    //
-    // private Vector3 _prevCenterOfMass;
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -53,10 +37,14 @@ public class MannequinAgent : Agent
     public List<FootContact> Feet;
     public RagdollController ragdollController;
 
-    // public AnimationPlayer RefModel;
-    // private Transform RefTransform;
-    // private List<Transform> RefTransforms;
+#if UNITY_EDITOR
+    [Header("Debug")]
+    public TextMeshPro cumulativeRewardText;
 
+    public bool drawDebugLine;
+    private float _lastReward = 0;
+    private AnimationPlayer _RefAP;
+#endif // UNITY_EDITOR
     public override void Initialize()
     {
         base.Initialize();
@@ -78,13 +66,10 @@ public class MannequinAgent : Agent
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
 
-#if UNITY_EDITOR
-        _lastReward = 0;
-#endif // UNITY_EDITOR
-
         var motionIndex = _trainingArea.GetRandomMotionIndex();
         currentMotion = _trainingArea.GetMotion(motionIndex);
 #if UNITY_EDITOR
+        _lastReward = 0;
         _RefAP.SetMotion(currentMotion);
 #endif // UNITY_EDITOR
 
@@ -142,10 +127,6 @@ public class MannequinAgent : Agent
         SetReward(0);
         AddTargetStateReward();
         AddReward((0.5f - forcePenalty) / 10);
-#if UNITY_EDITOR
-        // print($"Force penalty : {(0.5f - forcePenalty) / 10}");
-        ShowReward();
-#endif
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -219,11 +200,6 @@ public class MannequinAgent : Agent
 
         var comReward = GetComReward();
 
-#if UNITY_EDITOR
-        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward}\n" +
-        //       $"Joint reward : {totalJointPosReward} + {totalJointRotReward} + {totalJointVelReward}");
-#endif
-
         posReward += totalJointPosReward / 64f;
         // rotReward += totalJointRotReward / 16f;
         velReward += totalJointVelReward / 16f;
@@ -236,11 +212,6 @@ public class MannequinAgent : Agent
         avReward = Mathf.Exp(avReward / -20f);
         comReward = Mathf.Exp(comReward * -1f);
 
-#if UNITY_EDITOR
-        // print($"Total reward: {posReward} + {rotReward} + {velReward} + {avReward} + {comReward}\n");
-#endif
-        // var totalReward = (posReward + rotReward + velReward / 2 + avReward / 2) / 1.5f - 1f;
-
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
         var distHead = (targetHead - curHead).magnitude;
@@ -248,9 +219,7 @@ public class MannequinAgent : Agent
         if (distHead > 1f)
             _isTerminated = true;
 
-        var totalReward = comReward * (posReward + rotReward / 3 + velReward / 3 + (1f - distHead) / 3) - 1.05f;
-
-        _isRewarded = true;
+        var totalReward = (1f - distHead) * (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1.05f;
 
         AddReward(totalReward);
 
@@ -297,36 +266,50 @@ public class MannequinAgent : Agent
         rToePos.y = 0;
         var comReward = 0f;
 
-        if (Feet[0].isContact && Feet[1].isContact)
+        var isIn = PointInTriangle(projectedCom, lFootPos, lToePos, rFootPos)
+                   || PointInTriangle(projectedCom, lFootPos, lToePos, rToePos)
+                   || PointInTriangle(projectedCom, lFootPos, rFootPos, rToePos)
+                   || PointInTriangle(projectedCom, lToePos, rFootPos, rToePos);
+        if (!isIn)
         {
-            var isIn = PointInTriangle(projectedCom, lFootPos, lToePos, rFootPos)
-                       || PointInTriangle(projectedCom, lFootPos, lToePos, rToePos)
-                       || PointInTriangle(projectedCom, lFootPos, rFootPos, rToePos)
-                       || PointInTriangle(projectedCom, lToePos, rFootPos, rToePos);
-            var centerPos = lFootPos + rFootPos + lToePos + rToePos;
-            centerPos /= 4f;
-            var centerDir = centerPos - projectedCom;
-            var angle = Vector3.Angle(comDir, centerDir);
-            if (!isIn && angle > 90f)
-                comReward = angle * Mathf.Deg2Rad;
-        }
-        else if (Feet[0].isContact)
-        {
-            var rFootVel = AgentABs[6].velocity;
-            rFootVel.y = 0;
-            var angle = Vector3.Angle(comDir, rFootVel);
-            comReward = angle * Mathf.Deg2Rad;
-        }
-        else if (Feet[1].isContact)
-        {
-            var lFootVel = AgentABs[3].velocity;
-            lFootVel.y = 0;
-            var angle = Vector3.Angle(comDir, lFootVel);
-            comReward = angle * Mathf.Deg2Rad;
+            if (Feet[0].isContact && Feet[1].isContact)
+            {
+                var centerPos = lFootPos + rFootPos + lToePos + rToePos;
+                centerPos /= 4f;
+                var centerDir = centerPos - projectedCom;
+                var angle = Vector3.Angle(comDir, centerDir);
+                if (angle > 90f)
+                    comReward = angle * centerDir.magnitude;
+            }
+            else if (Feet[0].isContact)
+            {
+                var rFootVel = AgentABs[6].velocity;
+                rFootVel.y = 0;
+                var rFootToCom = com - rFootPos;
+                var lFootToRFoot = rFootPos - lFootPos;
+                var angleA = Vector3.Angle(rFootToCom, rFootVel);
+                var angleB = Vector3.Angle(lFootToRFoot, rFootVel);
+                var angleC = Vector3.Angle(rFootToCom, lFootToRFoot);
+
+                if (angleA + angleB > angleC)
+                    comReward = angleA > angleB ? angleB : angleA;
+            }
+            else if (Feet[1].isContact)
+            {
+                var lFootVel = AgentABs[3].velocity;
+                lFootVel.y = 0;
+                var lFootToCom = com - lFootPos;
+                var rFootToLFoot = lFootPos - rFootPos;
+                var angleA = Vector3.Angle(lFootToCom, lFootVel);
+                var angleB = Vector3.Angle(rFootToLFoot, lFootVel);
+                var angleC = Vector3.Angle(lFootToCom, rFootToLFoot);
+
+                if (angleA + angleB > angleC)
+                    comReward = angleA > angleB ? angleB : angleA;
+            }
         }
 
-
-        return comReward;
+        return comReward * Mathf.Deg2Rad;
     }
 
     private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
@@ -353,15 +336,6 @@ public class MannequinAgent : Agent
         EndEpisode();
     }
 
-    private void ShowReward()
-    {
-        if (!_isRewarded) return;
-        _isRewarded = false;
-        var delta = GetCumulativeReward() - _lastReward;
-        cumulativeRewardText.text = delta.ToString("0.00");
-        _lastReward = GetCumulativeReward();
-    }
-
 
     private void FixedUpdate()
     {
@@ -375,12 +349,51 @@ public class MannequinAgent : Agent
         {
             _currentFrame = curFrame;
             RequestDecision();
-
-#if UNITY_EDITOR
-            _RefAP.SetPose(currentPose);
-#endif // UNITY_EDITOR
         }
 
         ragdollController.ApplyTorque();
     }
+
+
+#if UNITY_EDITOR
+
+    private void Update()
+    {
+        _RefAP.SetPose(currentPose);
+        ShowReward();
+
+        if (drawDebugLine) DrawCOMAndFootContact();
+    }
+
+    private void ShowReward()
+    {
+        var delta = GetCumulativeReward() - _lastReward;
+        if (delta == 0f) return;
+        
+        cumulativeRewardText.text = delta.ToString("0.00");
+        _lastReward = GetCumulativeReward();
+    }
+
+    private void DrawCOMAndFootContact()
+    {
+        var projectedCom = _lastCOM;
+        projectedCom.y = 0;
+        var lFootPos = Feet[0].transform.position;
+        lFootPos.y = 0;
+        var rFootPos = Feet[1].transform.position;
+        rFootPos.y = 0;
+        var lToePos = lFootPos + Feet[0].transform.rotation * new Vector3(0, 0.2f, 0);
+        lToePos.y = 0;
+        var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
+        rToePos.y = 0;
+
+        Debug.DrawLine(projectedCom, lFootPos, Color.blue);
+        Debug.DrawLine(projectedCom, rFootPos, Color.blue);
+        Debug.DrawLine(projectedCom, lToePos, Color.blue);
+        Debug.DrawLine(projectedCom, rToePos, Color.blue);
+
+        Debug.DrawLine(lFootPos, lToePos, Feet[0].isContact ? Color.cyan : Color.red, 0f, false);
+        Debug.DrawLine(rFootPos, rToePos, Feet[1].isContact ? Color.cyan : Color.red, 0f, false);
+    }
+#endif // UNITY_EDITOR
 }
