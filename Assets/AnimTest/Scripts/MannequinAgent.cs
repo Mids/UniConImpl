@@ -204,6 +204,10 @@ public class MannequinAgent : Agent
         }
 
         var comReward = GetComReward();
+        
+        #if UNITY_EDITOR
+        print(comReward);
+        #endif
 
         posReward += totalJointPosReward / 64f;
         // rotReward += totalJointRotReward / 16f;
@@ -272,10 +276,7 @@ public class MannequinAgent : Agent
         rToePos.y = 0;
         var comReward = 0f;
 
-        var isIn = PointInTriangle(projectedCom, lFootPos, lToePos, rFootPos)
-                   || PointInTriangle(projectedCom, lFootPos, lToePos, rToePos)
-                   || PointInTriangle(projectedCom, lFootPos, rFootPos, rToePos)
-                   || PointInTriangle(projectedCom, lToePos, rFootPos, rToePos);
+        var isIn = PointInQuadrangle(projectedCom, lFootPos, lToePos, rFootPos, rToePos);
         if (!isIn)
         {
             if (Feet[0].isContact && Feet[1].isContact)
@@ -321,6 +322,14 @@ public class MannequinAgent : Agent
     private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
     {
         return (p1.x - p3.x) * (p2.z - p3.z) - (p2.x - p3.x) * (p1.z - p3.z);
+    }
+
+    private static bool PointInQuadrangle(Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
+    {
+        return PointInTriangle(pt, v1, v2, v3) ||
+               PointInTriangle(pt, v1, v2, v4) ||
+               PointInTriangle(pt, v1, v3, v4) ||
+               PointInTriangle(pt, v2, v3, v4);
     }
 
     private static bool PointInTriangle(Vector3 pt, Vector3 v1, Vector3 v2, Vector3 v3)
@@ -395,10 +404,20 @@ public class MannequinAgent : Agent
         var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
         rToePos.y = 0;
 
-        Debug.DrawLine(projectedCom, lFootPos, Color.blue);
-        Debug.DrawLine(projectedCom, rFootPos, Color.blue);
-        Debug.DrawLine(projectedCom, lToePos, Color.blue);
-        Debug.DrawLine(projectedCom, rToePos, Color.blue);
+        if (PointInQuadrangle(projectedCom, lFootPos, lToePos, rFootPos, rToePos))
+        {
+            Debug.DrawLine(projectedCom, lFootPos, Color.blue);
+            Debug.DrawLine(projectedCom, rFootPos, Color.blue);
+            Debug.DrawLine(projectedCom, lToePos, Color.blue);
+            Debug.DrawLine(projectedCom, rToePos, Color.blue);
+        }
+        else
+        {
+            Debug.DrawLine(projectedCom, lFootPos, Color.magenta);
+            Debug.DrawLine(projectedCom, rFootPos, Color.magenta);
+            Debug.DrawLine(projectedCom, lToePos, Color.magenta);
+            Debug.DrawLine(projectedCom, rToePos, Color.magenta);
+        }
 
         Debug.DrawLine(lFootPos, lToePos, Feet[0].isContact ? Color.cyan : Color.red, 0f, false);
         Debug.DrawLine(rFootPos, rToePos, Feet[1].isContact ? Color.cyan : Color.red, 0f, false);
