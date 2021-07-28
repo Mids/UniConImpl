@@ -224,7 +224,7 @@ public class MannequinAgent : Agent
         if (distHead > 1f)
             _isTerminated = true;
 
-        var totalReward = (1f - distHead) * (posReward + rotReward / 3 + velReward / 3 + comReward / 3) - 1.05f;
+        var totalReward = comReward * (1f - distHead) * (posReward + rotReward / 3 + velReward / 3) - 1f;
 
         AddReward(totalReward);
 
