@@ -249,10 +249,10 @@ public class MannequinAgent : Agent
         var distHead = targetHead.y - curHead.y;
         distHead *= distHead;
 
-        if (distHead > 0.5f)
+        if (distHead > 1f)
             _isTerminated = true;
 
-        var totalReward = comReward * (1f - distHead) * (2f + posReward + rotReward / 2f + velReward / 2f) / 4f;
+        var totalReward = comReward * (1f - distHead) * (2f + posReward + rotReward / 2f + velReward / 2f) / 2f - 1f;
 
         AddReward(totalReward);
 
