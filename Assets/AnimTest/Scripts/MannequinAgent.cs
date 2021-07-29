@@ -92,6 +92,32 @@ public class MannequinAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        var root = AgentTransforms[0];
+        var rootParent = root.parent;
+        var parentRot = rootParent.rotation;
+        var rootPos = rootParent.localPosition + parentRot * root.localPosition;
+
+        var com = Vector3.zero;
+        var totalMass = 0f;
+        foreach (var jointAB in AgentABs)
+        {
+            var mass = jointAB.mass;
+            com += (jointAB.worldCenterOfMass - root.position) * mass;
+            totalMass += mass;
+        }
+
+        com /= totalMass;
+        com += rootPos;
+        var comDir = com - _lastCOM;
+        var targetCOM = currentPose.joints[0].rotation * currentPose.centerOfMass + currentPose.joints[0].position;
+
+
+        sensor.AddObservation(com);
+        sensor.AddObservation(comDir * fps);
+        sensor.AddObservation(targetCOM);
+        sensor.AddObservation(targetCOM - com);
+
+
         // 191 + 573 = 764
         // Current State 11 + 180 = 191
         if (!ragdollController.OnCollectObservations(sensor))
