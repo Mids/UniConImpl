@@ -224,12 +224,12 @@ public class MannequinAgent : Agent
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
         var distHead = targetHead.y - curHead.y;
-        distHead *= distHead * 2;
+        distHead *= distHead;
 
-        if (distHead > 1f)
+        if (distHead > 0.5f)
             _isTerminated = true;
 
-        var totalReward = comReward * (1f - distHead) * (posReward + rotReward / 2 + velReward / 2) - 1f;
+        var totalReward = comReward * (1f - distHead) * (2f + posReward + rotReward / 2 + velReward / 2) / 2f - 1f;
 
         AddReward(totalReward);
 
