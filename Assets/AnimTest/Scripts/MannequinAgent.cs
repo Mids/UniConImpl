@@ -112,6 +112,8 @@ public class MannequinAgent : Agent
         var targetCOM = currentPose.joints[0].rotation * currentPose.centerOfMass + currentPose.joints[0].position;
 
 
+        sensor.AddObservation(Feet[0].isContact);
+        sensor.AddObservation(Feet[1].isContact);
         sensor.AddObservation(com);
         sensor.AddObservation(comDir * fps);
         sensor.AddObservation(targetCOM);
