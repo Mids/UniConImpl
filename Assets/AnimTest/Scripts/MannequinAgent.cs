@@ -24,7 +24,7 @@ public class MannequinAgent : Agent
     private bool _isInitialized = false;
     private Vector3 _lastCOM = Vector3.zero;
 
-    private static readonly int[] FrameOffset = {1, 4, 16};
+    private static readonly int[] FrameOffset = {1};
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -204,11 +204,6 @@ public class MannequinAgent : Agent
         }
 
         var comReward = GetComReward();
-        
-        #if UNITY_EDITOR
-        print(comReward);
-        #endif
-
         posReward += totalJointPosReward / 64f;
         // rotReward += totalJointRotReward / 16f;
         velReward += totalJointVelReward / 16f;

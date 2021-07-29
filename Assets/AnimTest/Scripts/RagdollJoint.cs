@@ -18,10 +18,16 @@ public class RagdollJoint : MonoBehaviour
 
     private bool _isRoot = false;
     private static Vector3 _rootPos;
+    private static Quaternion _rootRot;
     private static Quaternion _rootInv;
     private static Vector3 _rootVelocity;
     private static Vector3 _rootAngularVelocity;
     private const int AvThreshold = 20;
+
+    private Vector3 _jointPosObs;
+    private Vector3 _jointRotObs;
+    private Vector3 _jointVelObs;
+    private Vector3 _jointAVObs;
 
     public float stiffness;
     public float damping;
@@ -107,15 +113,15 @@ public class RagdollJoint : MonoBehaviour
         {
             var parent = t.parent;
             var parentRot = parent.rotation;
-            var rootRot = parentRot * t.localRotation;
 
             _rootPos = parent.localPosition + parentRot * t.localPosition;
-            _rootInv = Quaternion.Inverse(rootRot);
+            _rootRot = parentRot * t.localRotation;
+            _rootInv = Quaternion.Inverse(_rootRot);
             _rootVelocity = _ab.velocity;
             _rootAngularVelocity = _ab.angularVelocity;
 
             sensor.AddObservation(_rootPos.y);
-            sensor.AddObservation(rootRot);
+            sensor.AddObservation(_rootRot);
             sensor.AddObservation(_rootInv * _rootVelocity);
             sensor.AddObservation(_rootAngularVelocity * Mathf.Deg2Rad);
         }
@@ -124,15 +130,19 @@ public class RagdollJoint : MonoBehaviour
             var localRot = Quaternion.Inverse(_parentTransform.rotation) * t.rotation;
             var v = _ab.velocity - _rootVelocity;
             var av = _ab.angularVelocity - _rootAngularVelocity;
-            var rc = LocalToReducedCoordinate(localRot);
 
-            sensor.AddObservation(_rootInv * (t.position - _rootTransform.position));
+            _jointPosObs = _rootInv * (t.position - _rootTransform.position);
+            _jointRotObs = LocalToReducedCoordinate(localRot);
+            _jointVelObs = _rootInv * v;
+            _jointAVObs = av * Mathf.Deg2Rad;
+
+            sensor.AddObservation(_jointPosObs);
             if (dofCount == 3)
-                sensor.AddObservation(rc);
+                sensor.AddObservation(_jointRotObs);
             else if (dofCount == 1)
-                sensor.AddObservation(rc.z);
-            sensor.AddObservation(_rootInv * v);
-            sensor.AddObservation(av * Mathf.Deg2Rad);
+                sensor.AddObservation(_jointRotObs.z);
+            sensor.AddObservation(_jointVelObs);
+            sensor.AddObservation(_jointAVObs);
 
             if (av.magnitude > AvThreshold) result = false;
         }
@@ -144,26 +154,27 @@ public class RagdollJoint : MonoBehaviour
     {
         if (_isRoot)
         {
-            sensor.AddObservation(target.position.y);
-            sensor.AddObservation(target.rotation);
-            sensor.AddObservation(target.velocity);
-            sensor.AddObservation(target.angularVelocity * Mathf.Deg2Rad);
+            sensor.AddObservation(target.position.y - _rootPos.y);
+            sensor.AddObservation(_rootInv * target.rotation);
+            sensor.AddObservation(target.velocity - _rootInv * _rootVelocity);
+            sensor.AddObservation((target.angularVelocity - _rootAngularVelocity) * Mathf.Deg2Rad);
         }
         else
         {
-            sensor.AddObservation(target.position);
+            sensor.AddObservation(target.position - _jointPosObs);
 
             var localTargetRot = Quaternion.Inverse(_parent.targetJointData.rotation) * targetJointData.rotation;
             if (_parent._isRoot)
                 localTargetRot = targetJointData.rotation;
+            var rc = LocalToReducedCoordinate(localTargetRot);
 
             if (dofCount == 3)
-                sensor.AddObservation(LocalToReducedCoordinate(localTargetRot));
+                sensor.AddObservation(rc - _jointRotObs);
             else if (dofCount == 1)
-                sensor.AddObservation(LocalToReducedCoordinate(localTargetRot).z);
+                sensor.AddObservation(rc.z - _jointRotObs.z);
 
-            sensor.AddObservation(target.velocity);
-            sensor.AddObservation(target.angularVelocity * Mathf.Deg2Rad);
+            sensor.AddObservation(target.velocity - _jointVelObs);
+            sensor.AddObservation((target.angularVelocity - _jointAVObs) * Mathf.Deg2Rad);
         }
     }
 
