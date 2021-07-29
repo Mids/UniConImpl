@@ -249,10 +249,17 @@ public class MannequinAgent : Agent
         var distHead = targetHead.y - curHead.y;
         distHead *= distHead;
 
-        if (distHead > 1f)
-            _isTerminated = true;
 
-        var totalReward = comReward * (1f - distHead) * (2f + posReward + rotReward / 2f + velReward / 2f) / 2f - 1f;
+        var totalReward = comReward * 0.9f
+                          + (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f) * 0.09f
+                          - 1f;
+        totalReward *= 2f;
+
+        if (totalReward < -0.8f)
+        {
+            _isTerminated = true;
+            totalReward = -1f;
+        }
 
         AddReward(totalReward);
 
@@ -315,11 +322,11 @@ public class MannequinAgent : Agent
             {
                 var rFootVel = AgentABs[6].velocity;
                 rFootVel.y = 0;
-                var rFootToCom = com - rFootPos;
-                var lFootToRFoot = rFootPos - lFootPos;
+                var rFootToCom = projectedCom - rFootPos;
+                var lFootToCom = projectedCom - lFootPos;
                 var angleA = Vector3.Angle(rFootToCom, rFootVel);
-                var angleB = Vector3.Angle(lFootToRFoot, rFootVel);
-                var angleC = Vector3.Angle(rFootToCom, lFootToRFoot);
+                var angleB = Vector3.Angle(lFootToCom, rFootVel);
+                var angleC = Vector3.Angle(rFootToCom, lFootToCom);
 
                 if (angleA + angleB > angleC)
                     comReward = angleA > angleB ? angleB : angleA;
@@ -328,11 +335,11 @@ public class MannequinAgent : Agent
             {
                 var lFootVel = AgentABs[3].velocity;
                 lFootVel.y = 0;
-                var lFootToCom = com - lFootPos;
-                var rFootToLFoot = lFootPos - rFootPos;
+                var lFootToCom = projectedCom - lFootPos;
+                var rFootToCom = projectedCom - rFootPos;
                 var angleA = Vector3.Angle(lFootToCom, lFootVel);
-                var angleB = Vector3.Angle(rFootToLFoot, lFootVel);
-                var angleC = Vector3.Angle(lFootToCom, rFootToLFoot);
+                var angleB = Vector3.Angle(rFootToCom, lFootVel);
+                var angleC = Vector3.Angle(lFootToCom, rFootToCom);
 
                 if (angleA + angleB > angleC)
                     comReward = angleA > angleB ? angleB : angleA;
