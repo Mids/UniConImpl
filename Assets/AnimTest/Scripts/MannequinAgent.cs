@@ -250,7 +250,7 @@ public class MannequinAgent : Agent
         distHead *= distHead;
 
 
-        var totalReward = comReward * 0.9f
+        var totalReward = comReward * 1.8f
                           + (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f) * 0.09f
                           - 1f;
         totalReward *= 2f;
