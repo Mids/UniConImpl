@@ -255,10 +255,22 @@ public class MannequinAgent : Agent
                           - 1f;
         totalReward *= 2f;
 
-        if (totalReward < -0.8f)
+        if (totalReward < -0.8f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1f;
+        }
+        else
+        {
+            for (var index = 0; index < AgentTransforms.Count; index++)
+            {
+                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
+                    continue;
+
+                _isTerminated = true;
+                totalReward = -1;
+                break;
+            }
         }
 
         AddReward(totalReward);
