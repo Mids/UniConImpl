@@ -186,13 +186,20 @@ public class RagdollJoint : MonoBehaviour
             return;
         }
 
-        var exaggeratedVector = v;
-        exaggeratedVector.Scale(powerVector);
+        // var exaggeratedVector = v;
+        // exaggeratedVector.Scale(powerVector);
+        //
+        // var localTorque = _ab.parentAnchorRotation * exaggeratedVector;
+        // var worldTorque = Quaternion.Inverse(_ab.transform.rotation) * localTorque;
+        // _parent._ab.AddTorque(-worldTorque);
+        // _ab.AddTorque(worldTorque);
 
-        var localTorque = _ab.parentAnchorRotation * exaggeratedVector;
-        var worldTorque = Quaternion.Inverse(_ab.transform.rotation) * localTorque;
-        _parent._ab.AddTorque(-worldTorque);
-        _ab.AddTorque(worldTorque);
+        if (_ab.twistLock == ArticulationDofLock.LimitedMotion)
+            _ab.xDrive = SetTarget(_ab.xDrive, v.x);
+        if (_ab.swingYLock == ArticulationDofLock.LimitedMotion)
+            _ab.yDrive = SetTarget(_ab.yDrive, v.y);
+        if (_ab.swingZLock == ArticulationDofLock.LimitedMotion)
+            _ab.zDrive = SetTarget(_ab.zDrive, v.z);
     }
 
     public void AddRelativeTorque(float x, float y, float z)

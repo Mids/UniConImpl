@@ -1655,8 +1655,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a310df83318a20c43aefe750978e0117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allStiffness: 100
-  allDamping: 30
+  allStiffness: 200
+  allDamping: 10
   powerVectors:
   - {x: 0, y: 0, z: 0}
   - {x: 300, y: 150, z: 200}
