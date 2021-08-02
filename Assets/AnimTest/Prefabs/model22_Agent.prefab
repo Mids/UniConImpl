@@ -1135,8 +1135,8 @@ ArticulationBody:
     target: 0
     targetVelocity: 0
   m_YDrive:
-    lowerLimit: -90
-    upperLimit: 30
+    lowerLimit: -30
+    upperLimit: 90
     stiffness: 100
     damping: 30
     forceLimit: 3.4028235e+38
