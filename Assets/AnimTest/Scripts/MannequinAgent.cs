@@ -250,12 +250,9 @@ public class MannequinAgent : Agent
         distHead *= distHead;
 
 
-        var totalReward = comReward * 1.8f
-                          + (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f) * 0.09f
-                          - 1f;
-        totalReward *= 2f;
+        var totalReward = (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f + comReward) / 3f;
 
-        if (totalReward < -0.8f || AgentTransforms[12].position.y < 0.3f)
+        if (totalReward < 0.1f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1f;
