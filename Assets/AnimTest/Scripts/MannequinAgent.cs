@@ -185,9 +185,9 @@ public class MannequinAgent : Agent
 
         var targetRoot = targetPose.joints[0];
 
-        var posReward = rootPos.y - targetRoot.position.y;
-        posReward *= posReward;
-        // var posReward = (rootPos - targetRoot.position).sqrMagnitude;
+        // var posReward = rootPos.y - targetRoot.position.y;
+        // posReward *= posReward;
+        var posReward = (rootPos - targetRoot.position).sqrMagnitude;
 
         var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) / 180 * Mathf.PI; // degrees
         rotReward *= rotReward;
@@ -242,12 +242,11 @@ public class MannequinAgent : Agent
         rotReward = Mathf.Exp(rotReward / -4f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
-        comReward = Mathf.Exp(comReward * -1f);
+        comReward = Mathf.Exp(comReward * -2f);
 
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
-        var distHead = targetHead.y - curHead.y;
-        distHead *= distHead;
+        var distHead = (targetHead - curHead).magnitude;
 
 
         var totalReward = (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f + comReward) / 3f;
@@ -301,61 +300,87 @@ public class MannequinAgent : Agent
         com += rootPos;
         var comDir = com - _lastCOM;
         _lastCOM = com;
-        var projectedCom = com;
-        projectedCom.y = 0f;
-        comDir.y = 0f;
 
-        var lFootPos = Feet[0].transform.position;
-        lFootPos.y = 0;
-        var rFootPos = Feet[1].transform.position;
-        rFootPos.y = 0;
-        var lToePos = lFootPos + Feet[0].transform.rotation * new Vector3(0, 0.2f, 0);
-        lToePos.y = 0;
-        var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
-        rToePos.y = 0;
-        var comReward = 0f;
-
-        var isIn = PointInQuadrangle(projectedCom, lFootPos, lToePos, rFootPos, rToePos);
-        if (!isIn)
         {
-            if (Feet[0].isContact && Feet[1].isContact)
-            {
-                var centerPos = lFootPos + rFootPos + lToePos + rToePos;
-                centerPos /= 4f;
-                var centerDir = centerPos - projectedCom;
-                var angle = Vector3.Angle(comDir, centerDir);
-                if (angle > 90f)
-                    comReward = angle * centerDir.magnitude;
-            }
-            else if (Feet[0].isContact)
-            {
-                var rFootVel = AgentABs[6].velocity;
-                rFootVel.y = 0;
-                var rFootToCom = projectedCom - rFootPos;
-                var lFootToCom = projectedCom - lFootPos;
-                var angleA = Vector3.Angle(rFootToCom, rFootVel);
-                var angleB = Vector3.Angle(lFootToCom, rFootVel);
-                var angleC = Vector3.Angle(rFootToCom, lFootToCom);
+            var comVel = comDir * fps;
+            comVel.y = 0f;
 
-                if (angleA + angleB > angleC)
-                    comReward = angleA > angleB ? angleB : angleA;
-            }
-            else if (Feet[1].isContact)
+            var curFrame = _currentFrame;
+            var lastFrame = curFrame - 1;
+            if (lastFrame < 0)
             {
-                var lFootVel = AgentABs[3].velocity;
-                lFootVel.y = 0;
-                var lFootToCom = projectedCom - lFootPos;
-                var rFootToCom = projectedCom - rFootPos;
-                var angleA = Vector3.Angle(lFootToCom, lFootVel);
-                var angleB = Vector3.Angle(rFootToCom, lFootVel);
-                var angleC = Vector3.Angle(lFootToCom, rFootToCom);
-
-                if (angleA + angleB > angleC)
-                    comReward = angleA > angleB ? angleB : angleA;
+                lastFrame = 0;
+                curFrame = 1;
             }
+
+            var curPose = currentMotion.data[curFrame];
+            var lastPose = currentMotion.data[lastFrame];
+            var curCom = curPose.joints[0].position + curPose.joints[0].rotation * curPose.centerOfMass;
+            var lastCom = lastPose.joints[0].position + lastPose.joints[0].rotation * lastPose.centerOfMass;
+            var targetComVel = curCom - lastCom;
+            targetComVel *= fps;
+            targetComVel.y = 0;
+
+            var diff = comVel - targetComVel;
+
+            return diff.magnitude;
         }
 
-        return comReward * Mathf.Deg2Rad;
+        // var projectedCom = com;
+        // projectedCom.y = 0f;
+        // comDir.y = 0f;
+        //
+        // var lFootPos = Feet[0].transform.position;
+        // lFootPos.y = 0;
+        // var rFootPos = Feet[1].transform.position;
+        // rFootPos.y = 0;
+        // var lToePos = lFootPos + Feet[0].transform.rotation * new Vector3(0, 0.2f, 0);
+        // lToePos.y = 0;
+        // var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
+        // rToePos.y = 0;
+        // var comReward = 0f;
+        //
+        // var isIn = PointInQuadrangle(projectedCom, lFootPos, lToePos, rFootPos, rToePos);
+        // if (!isIn)
+        // {
+        //     if (Feet[0].isContact && Feet[1].isContact)
+        //     {
+        //         var centerPos = lFootPos + rFootPos + lToePos + rToePos;
+        //         centerPos /= 4f;
+        //         var centerDir = centerPos - projectedCom;
+        //         var angle = Vector3.Angle(comDir, centerDir);
+        //         if (angle > 90f)
+        //             comReward = angle * centerDir.magnitude;
+        //     }
+        //     else if (Feet[0].isContact)
+        //     {
+        //         var rFootVel = AgentABs[6].velocity;
+        //         rFootVel.y = 0;
+        //         var rFootToCom = projectedCom - rFootPos;
+        //         var lFootToCom = projectedCom - lFootPos;
+        //         var angleA = Vector3.Angle(rFootToCom, rFootVel);
+        //         var angleB = Vector3.Angle(lFootToCom, rFootVel);
+        //         var angleC = Vector3.Angle(rFootToCom, lFootToCom);
+        //
+        //         if (angleA + angleB > angleC)
+        //             comReward = angleA > angleB ? angleB : angleA;
+        //     }
+        //     else if (Feet[1].isContact)
+        //     {
+        //         var lFootVel = AgentABs[3].velocity;
+        //         lFootVel.y = 0;
+        //         var lFootToCom = projectedCom - lFootPos;
+        //         var rFootToCom = projectedCom - rFootPos;
+        //         var angleA = Vector3.Angle(lFootToCom, lFootVel);
+        //         var angleB = Vector3.Angle(rFootToCom, lFootVel);
+        //         var angleC = Vector3.Angle(lFootToCom, rFootToCom);
+        //
+        //         if (angleA + angleB > angleC)
+        //             comReward = angleA > angleB ? angleB : angleA;
+        //     }
+        // }
+        //
+        // return comReward * Mathf.Deg2Rad;
     }
 
     private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
