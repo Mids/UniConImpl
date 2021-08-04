@@ -141,7 +141,7 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        AddReward((0.5f - forcePenalty) / 10);
+        AddReward((0.5f - forcePenalty) / 100);
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -187,14 +187,14 @@ public class MannequinAgent : Agent
 
         // var posReward = rootPos.y - targetRoot.position.y;
         // posReward *= posReward;
-        var posReward = (rootPos - targetRoot.position).sqrMagnitude;
+        var posReward = (rootPos - targetRoot.position).magnitude;
 
-        var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) / 180 * Mathf.PI; // degrees
-        rotReward *= rotReward;
+        var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) * Mathf.Deg2Rad;
+        // rotReward *= rotReward;
 
-        var velReward = (rootAB.velocity - targetRoot.velocity).sqrMagnitude;
+        var velReward = (rootAB.velocity - targetRoot.velocity).magnitude;
 
-        var avReward = (rootAB.angularVelocity - targetRoot.angularVelocity).sqrMagnitude;
+        var avReward = (rootAB.angularVelocity - targetRoot.angularVelocity).magnitude;
 
         // print($"Root posReward: {posReward}, rotReward: {rotReward}");
 
@@ -205,51 +205,53 @@ public class MannequinAgent : Agent
         var jointNum = AgentABs.Count;
         for (var index = 1; index < jointNum; ++index)
         {
-            // if (index != 3 &&
-            //     index != 6 &&
-            //     index != 11 &&
-            //     index != 15) continue;
+            if (index != 3 &&
+                index != 6 &&
+                index != 11 &&
+                index != 12 &&
+                index != 15) continue;
+
             var jointT = AgentTransforms[index];
             var jointAB = AgentABs[index];
             var targetData = targetPose.joints[index];
 
             var posDiff = rootInv * (jointT.position - root.position) - targetData.position;
-            var jointPosReward = posDiff.sqrMagnitude;
+            var jointPosReward = posDiff.magnitude;
             totalJointPosReward += jointPosReward;
 
             var rotDiff = Quaternion.Angle(rootInv * jointT.rotation, targetData.rotation);
-            var jointRotReward = Mathf.Abs(rotDiff) / 180 * Mathf.PI;
-            jointRotReward *= jointRotReward;
+            var jointRotReward = rotDiff * Mathf.Deg2Rad;
+            // jointRotReward *= jointRotReward;
             totalJointRotReward += jointRotReward;
 
             var velDiff = rootInv * (jointAB.velocity - rootAB.velocity) - targetData.velocity;
-            var jointVelReward = velDiff.sqrMagnitude;
+            var jointVelReward = velDiff.magnitude;
             totalJointVelReward += jointVelReward;
 
             var avDiff = jointAB.angularVelocity - rootAB.angularVelocity - targetData.angularVelocity;
-            var jointAvReward = avDiff.sqrMagnitude;
+            var jointAvReward = avDiff.magnitude;
             totalJointAvReward += jointAvReward;
         }
 
         var comReward = GetComReward();
-        posReward += totalJointPosReward / 64f;
-        // rotReward += totalJointRotReward / 16f;
-        velReward += totalJointVelReward / 16f;
-        avReward += totalJointAvReward / 16f;
+        posReward += totalJointPosReward / 5f;
+        // rotReward += totalJointRotReward / 5f;
+        velReward += totalJointVelReward / 5f;
+        avReward += totalJointAvReward / 5f;
 
 
-        posReward = Mathf.Exp(posReward * -4f);
+        posReward = Mathf.Exp(posReward * -1f);
         rotReward = Mathf.Exp(rotReward / -4f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
-        comReward = Mathf.Exp(comReward * -2f);
+        comReward = Mathf.Exp(comReward * -1f);
 
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
         var distHead = (targetHead - curHead).magnitude;
 
 
-        var totalReward = (1f - distHead) * (posReward + rotReward / 2f + velReward / 2f + comReward) / 3f;
+        var totalReward = (1f - distHead) * (posReward + rotReward + velReward + comReward) / 4f;
 
         if (totalReward < 0.1f || AgentTransforms[12].position.y < 0.3f)
         {
@@ -325,62 +327,6 @@ public class MannequinAgent : Agent
 
             return diff.magnitude;
         }
-
-        // var projectedCom = com;
-        // projectedCom.y = 0f;
-        // comDir.y = 0f;
-        //
-        // var lFootPos = Feet[0].transform.position;
-        // lFootPos.y = 0;
-        // var rFootPos = Feet[1].transform.position;
-        // rFootPos.y = 0;
-        // var lToePos = lFootPos + Feet[0].transform.rotation * new Vector3(0, 0.2f, 0);
-        // lToePos.y = 0;
-        // var rToePos = rFootPos + Feet[1].transform.rotation * new Vector3(0, 0.2f, 0);
-        // rToePos.y = 0;
-        // var comReward = 0f;
-        //
-        // var isIn = PointInQuadrangle(projectedCom, lFootPos, lToePos, rFootPos, rToePos);
-        // if (!isIn)
-        // {
-        //     if (Feet[0].isContact && Feet[1].isContact)
-        //     {
-        //         var centerPos = lFootPos + rFootPos + lToePos + rToePos;
-        //         centerPos /= 4f;
-        //         var centerDir = centerPos - projectedCom;
-        //         var angle = Vector3.Angle(comDir, centerDir);
-        //         if (angle > 90f)
-        //             comReward = angle * centerDir.magnitude;
-        //     }
-        //     else if (Feet[0].isContact)
-        //     {
-        //         var rFootVel = AgentABs[6].velocity;
-        //         rFootVel.y = 0;
-        //         var rFootToCom = projectedCom - rFootPos;
-        //         var lFootToCom = projectedCom - lFootPos;
-        //         var angleA = Vector3.Angle(rFootToCom, rFootVel);
-        //         var angleB = Vector3.Angle(lFootToCom, rFootVel);
-        //         var angleC = Vector3.Angle(rFootToCom, lFootToCom);
-        //
-        //         if (angleA + angleB > angleC)
-        //             comReward = angleA > angleB ? angleB : angleA;
-        //     }
-        //     else if (Feet[1].isContact)
-        //     {
-        //         var lFootVel = AgentABs[3].velocity;
-        //         lFootVel.y = 0;
-        //         var lFootToCom = projectedCom - lFootPos;
-        //         var rFootToCom = projectedCom - rFootPos;
-        //         var angleA = Vector3.Angle(lFootToCom, lFootVel);
-        //         var angleB = Vector3.Angle(rFootToCom, lFootVel);
-        //         var angleC = Vector3.Angle(lFootToCom, rFootToCom);
-        //
-        //         if (angleA + angleB > angleC)
-        //             comReward = angleA > angleB ? angleB : angleA;
-        //     }
-        // }
-        //
-        // return comReward * Mathf.Deg2Rad;
     }
 
     private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
