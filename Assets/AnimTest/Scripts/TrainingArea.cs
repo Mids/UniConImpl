@@ -38,7 +38,7 @@ public class TrainingArea : MonoBehaviour
 
     public void InitArea()
     {
-        motions = Resources.LoadAll<MotionData>("Motions");
+        motions = Resources.LoadAll<MotionData>("NSM");
     }
 
     public int GetRandomMotionIndex()
