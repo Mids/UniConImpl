@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using DataProcessor;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,12 +7,9 @@ public class AnimationPlayerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        base.OnInspectorGUI();
+        DrawDefaultInspector();
 
         if (GUILayout.Button("Play"))
-        {
-            var ap = target as AnimationPlayer;
-            ap.PlayCoroutine();
-        }
+            (target as AnimationPlayer)?.PlayCoroutine();
     }
 }

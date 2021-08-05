@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DataProcessor;
 using UnityEngine;
 
 public class TrainingArea : MonoBehaviour

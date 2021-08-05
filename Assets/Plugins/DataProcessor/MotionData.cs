@@ -5,29 +5,31 @@ using UnityEditor;
 
 #endif // UNITY_EDITOR
 
-public class MotionData : ScriptableObject
+namespace DataProcessor
 {
-    public string characterName;
-    public string motionName;
-    public int totalFrame;
-    public float fps = 60;
-    public List<SkeletonData> data;
-
-    public void Init(int frameCount)
+    public class MotionData : ScriptableObject
     {
-        totalFrame = frameCount;
-        data = new List<SkeletonData>(frameCount);
-    }
+        public string characterName;
+        public string motionName;
+        public int totalFrame;
+        public float fps = 60;
+        public List<SkeletonData> data;
 
-    public void Save()
-    {
+        public void Init(int frameCount)
+        {
+            data = new List<SkeletonData>(frameCount);
+        }
+
+        public void Save()
+        {
 #if UNITY_EDITOR
-        var path = $"Assets/output/{motionName}.motion.asset";
-        Debug.Log($"Saving to {path}");
-        if (!AssetDatabase.IsValidFolder("Assets/output"))
-            AssetDatabase.CreateFolder("Assets", "output");
-        AssetDatabase.CreateAsset(this, path);
-        AssetDatabase.SaveAssets();
+            var path = $"Assets/output/{motionName}.motion.asset";
+            Debug.Log($"Saving to {path}");
+            if (!AssetDatabase.IsValidFolder("Assets/output"))
+                AssetDatabase.CreateFolder("Assets", "output");
+            AssetDatabase.CreateAsset(this, path);
+            AssetDatabase.SaveAssets();
 #endif // UNITY_EDITOR
+        }
     }
 }

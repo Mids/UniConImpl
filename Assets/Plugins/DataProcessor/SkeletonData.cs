@@ -1,17 +1,22 @@
 ﻿using System;
 using UnityEngine;
 
-[Serializable]
-public struct SkeletonData
+namespace DataProcessor
 {
-    public int frameNumber;
-    public Vector3 centerOfMass;
-    public JointData[] joints;
-
-    public SkeletonData(int nubmerOfJoints)
+    [Serializable]
+    public struct SkeletonData
     {
-        frameNumber = -1;
-        centerOfMass = default;
-        joints = new JointData[nubmerOfJoints];
+        public int frameNumber;
+        public Vector3 centerOfMass;
+        public Vector3 centerOfMassVelocity;
+        public JointData[] joints;
+
+        public SkeletonData(int nubmerOfJoints)
+        {
+            frameNumber = -1;
+            centerOfMass = default;
+            centerOfMassVelocity = default;
+            joints = new JointData[nubmerOfJoints];
+        }
     }
 }
