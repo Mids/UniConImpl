@@ -85,6 +85,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -175,6 +176,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -266,6 +268,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -375,6 +378,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -465,6 +469,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -555,6 +560,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -645,6 +651,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -735,6 +742,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -826,6 +834,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -917,6 +926,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1176,6 +1186,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1253,6 +1264,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1356,6 +1368,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1459,6 +1472,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1549,6 +1563,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1610,7 +1625,7 @@ MonoBehaviour:
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: efb8cbbed7113f84b8b91c6ca065ede7, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 3789466f5d365854e8b3aac3aa17a690, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1770,6 +1785,7 @@ MonoBehaviour:
     jointName: 
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
+    inverseRotation: {x: 0, y: 0, z: 0, w: 0}
     velocity: {x: 0, y: 0, z: 0}
     angularVelocity: {x: 0, y: 0, z: 0}
   stiffness: 0
@@ -1783,6 +1799,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8430278312401105675}
     m_Modifications:
+    - target: {fileID: -8852445798645605875, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
         type: 3}
       propertyPath: m_RootOrder
@@ -1838,10 +1859,85 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7157947559494028057, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -6346374283394955442, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -5490650071928370707, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -3430368352385215391, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2797058120136860110, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2750501195568244532, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2270137954007014342, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -2010723455046536714, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -1703309347206186461, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -980318418390082500, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 768861596289844280, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
         type: 3}
       propertyPath: m_Name
       value: Mesh
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000448557295188564, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4728643934621710660, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 6311696543851329281, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7827896613639157510, guid: 949932a2cbaaaaa4ba2d9eed6242e30c,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 949932a2cbaaaaa4ba2d9eed6242e30c, type: 3}
