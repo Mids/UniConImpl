@@ -139,6 +139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bd6586abbc595948b55cd956f6ab04b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  folderPath: NSM/Test
   mannequinAgentPrefab: {fileID: 7059140856800124868, guid: c9e0d2a9e22290841a4147648c7d0559,
     type: 3}
   motions: []

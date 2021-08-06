@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TrainingArea : MonoBehaviour
 {
+    public string folderPath;
     public MannequinAgent mannequinAgentPrefab;
 
     private Rigidbody[] _rigidbody;
@@ -38,7 +39,7 @@ public class TrainingArea : MonoBehaviour
 
     public void InitArea()
     {
-        motions = Resources.LoadAll<MotionData>("NSM");
+        motions = Resources.LoadAll<MotionData>(folderPath);
     }
 
     public int GetRandomMotionIndex()
