@@ -250,27 +250,32 @@ public class MannequinAgent : Agent
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
         var distHead = (targetHead - curHead).magnitude;
+        var distFactor = Mathf.Clamp(1.3f - 1.4f * distHead, 0f, 1f);
 
+        var totalReward = distFactor * (posReward + rotReward + velReward + comReward) / 4f;
 
-        var totalReward = (1f - distHead) * (posReward + rotReward + velReward + comReward) / 4f;
-
-        if (totalReward < 0.1f || AgentTransforms[12].position.y < 0.3f)
+        if (distHead > 1f)
         {
             _isTerminated = true;
             totalReward = -1f;
         }
-        else
-        {
-            for (var index = 0; index < AgentTransforms.Count; index++)
-            {
-                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
-                    continue;
-
-                _isTerminated = true;
-                totalReward = -1;
-                break;
-            }
-        }
+        // if (totalReward < 0.1f || AgentTransforms[12].position.y < 0.3f)
+        // {
+        //     _isTerminated = true;
+        //     totalReward = -1f;
+        // }
+        // else
+        // {
+        //     for (var index = 0; index < AgentTransforms.Count; index++)
+        //     {
+        //         if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
+        //             continue;
+        //
+        //         _isTerminated = true;
+        //         totalReward = -1;
+        //         break;
+        //     }
+        // }
 
         AddReward(totalReward);
 
