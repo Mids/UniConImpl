@@ -24,6 +24,7 @@ public class MannequinAgent : Agent
     private int _currentFrame = -1;
     private bool _isInitialized = false;
     private Vector3 _lastCOM = Vector3.zero;
+    private int _terminatedFrame = -1;
 
     private static readonly int[] FrameOffset = {1};
 
@@ -71,14 +72,23 @@ public class MannequinAgent : Agent
         _earlyTerminationStack = 0;
 
         var motionIndex = _trainingArea.GetRandomMotionIndex();
-        currentMotion = _trainingArea.GetMotion(motionIndex);
+        if (_terminatedFrame > 0)
+        {
+            _initFrame = Mathf.Max(_terminatedFrame - 100, 0);
+        }
+        else
+        {
+            currentMotion = _trainingArea.GetMotion(motionIndex);
+            _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex) / 2);
+        }
+
+        _terminatedFrame = -1;
+
 #if UNITY_EDITOR
         _lastReward = 0;
         _RefAP.SetMotion(currentMotion);
 #endif // UNITY_EDITOR
 
-        // TODO: RSI
-        _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex) / 2);
         // _initFrame = 0;
         _initTime = _initFrame / fps;
         _currentFrame = _initFrame;
@@ -234,7 +244,7 @@ public class MannequinAgent : Agent
             totalJointAvReward += jointAvReward;
         }
 
-        var comReward = GetComReward();
+        var comVelReward = GetComVelReward();
         posReward += totalJointPosReward / 5f;
         // rotReward += totalJointRotReward / 5f;
         velReward += totalJointVelReward / 5f;
@@ -245,37 +255,32 @@ public class MannequinAgent : Agent
         rotReward = Mathf.Exp(rotReward / -4f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
-        comReward = Mathf.Exp(comReward * -1f);
+        comVelReward = Mathf.Exp(comVelReward * -1f);
 
-        var curHead = AgentTransforms[12].position - rootParent.parent.position;
-        var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
-        var distHead = (targetHead - curHead).magnitude;
-        var distFactor = Mathf.Clamp(1.3f - 1.4f * distHead, 0f, 1f);
+        var curCom = _lastCOM;
+        var targetCom = currentPose.joints[0].rotation * currentPose.centerOfMass + currentPose.joints[0].position;
+        var distCom = (targetCom - curCom).sqrMagnitude;
+        var distFactor = Mathf.Clamp(1.1f - 1.2f * distCom, 0f, 1f);
 
-        var totalReward = distFactor * (posReward + rotReward + velReward + comReward) / 4f;
+        var totalReward = distFactor * (posReward + rotReward + velReward + comVelReward) / 4f;
 
-        if (distHead > 1f)
+        if (distCom > 1f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1f;
         }
-        // if (totalReward < 0.1f || AgentTransforms[12].position.y < 0.3f)
-        // {
-        //     _isTerminated = true;
-        //     totalReward = -1f;
-        // }
-        // else
-        // {
-        //     for (var index = 0; index < AgentTransforms.Count; index++)
-        //     {
-        //         if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
-        //             continue;
-        //
-        //         _isTerminated = true;
-        //         totalReward = -1;
-        //         break;
-        //     }
-        // }
+        else
+        {
+            for (var index = 0; index < AgentTransforms.Count; index++)
+            {
+                if (index == 3 || index == 6 || AgentTransforms[index].position.y > 0.1f)
+                    continue;
+
+                _isTerminated = true;
+                totalReward = -1;
+                break;
+            }
+        }
 
         AddReward(totalReward);
 
@@ -288,7 +293,7 @@ public class MannequinAgent : Agent
         if (_isTerminated) EarlyTerminate();
     }
 
-    private float GetComReward()
+    private float GetComVelReward()
     {
         var root = AgentTransforms[0];
         var rootParent = root.parent;
@@ -363,7 +368,8 @@ public class MannequinAgent : Agent
     private void EarlyTerminate()
     {
         if (++_earlyTerminationStack < EarlyTerminationMax) return;
-
+        if (_currentFrame > _initFrame + 100)
+            _terminatedFrame = _currentFrame;
         EndEpisode();
     }
 
