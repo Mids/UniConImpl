@@ -287,5 +287,7 @@ public class RagdollJoint : MonoBehaviour
         _ab = GetComponent<ArticulationBody>();
         _isRoot = _ab.isRoot;
         dofCount = _ab.dofCount;
+        _ab.solverIterations = 50;
+        _ab.solverVelocityIterations = 50;
     }
 }

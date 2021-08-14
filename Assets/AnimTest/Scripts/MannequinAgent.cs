@@ -257,14 +257,14 @@ public class MannequinAgent : Agent
         avReward = Mathf.Exp(avReward / -20f);
         comVelReward = Mathf.Exp(comVelReward * -1f);
 
-        var curCom = _lastCOM;
-        var targetCom = currentPose.joints[0].rotation * currentPose.centerOfMass + currentPose.joints[0].position;
-        var distCom = (targetCom - curCom).sqrMagnitude;
-        var distFactor = Mathf.Clamp(1.1f - 1.2f * distCom, 0f, 1f);
+        var curHead = AgentTransforms[12].position - rootParent.parent.position;
+        var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
+        var distHead = (targetHead - curHead).magnitude;
+        var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor * (posReward + rotReward + velReward + comVelReward) / 4f;
 
-        if (distCom > 1f || AgentTransforms[12].position.y < 0.3f)
+        if (distHead > 1f || AgentTransforms[12].position.y < 0.3f)
         {
             _isTerminated = true;
             totalReward = -1f;

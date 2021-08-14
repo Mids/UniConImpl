@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using DataProcessor;
+using Unity.MLAgents;
 using UnityEngine;
 
 public class TrainingArea : MonoBehaviour
 {
     public string folderPath;
-    public MannequinAgent mannequinAgentPrefab;
+    public Agent AgentPrefab;
 
     private Rigidbody[] _rigidbody;
 
@@ -30,7 +31,7 @@ public class TrainingArea : MonoBehaviour
         int gap = 20;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)
-            Instantiate(mannequinAgentPrefab, new Vector3(
+            Instantiate(AgentPrefab, new Vector3(
                 gap / 2 * (1 - size + 2 * i),
                 0,
                 gap * -j
