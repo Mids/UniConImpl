@@ -77,3 +77,4 @@ reward.txt
 Assets/ML-Agents/Timers/HumanoidScene_timers.json
 actionOutput.txt
 Assets/ML-Agents/Timers/AnimScene_timers.json
+Assets/Resources/NSM/*.meta

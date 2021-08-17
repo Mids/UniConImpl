@@ -9,6 +9,6 @@ EditorBuildSettings:
     path: Assets/Scenes/AnimScene.unity
     guid: ad9305e3633fad64aaadd15d4caf2288
   - enabled: 0
-    path: Assets/Scenes/HumanoidScene.unity
+    path: Assets/Scenes/TestScene.unity
     guid: 4cab280cbea298e459aadc17750b7ee7
   m_configObjects: {}

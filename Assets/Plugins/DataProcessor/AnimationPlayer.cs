@@ -34,7 +34,6 @@ namespace DataProcessor
         public void SetMotion(MotionData data)
         {
             motion = data;
-            dt = 1f / data.fps;
         }
 
         public void PlayCoroutine()
@@ -45,6 +44,7 @@ namespace DataProcessor
 
         private IEnumerator Play()
         {
+            dt = 1f / motion.fps;
             foreach (var skeleton in motion.data)
             {
                 SetPose(skeleton);
