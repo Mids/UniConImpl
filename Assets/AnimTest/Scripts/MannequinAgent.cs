@@ -27,6 +27,7 @@ public class MannequinAgent : Agent
     private int _terminatedFrame = -1;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
+    private static int MaxStepInEpisode = 200;
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -79,7 +80,7 @@ public class MannequinAgent : Agent
         else
         {
             currentMotion = _trainingArea.GetMotion(motionIndex);
-            _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex) / 2);
+            _initFrame = Random.Range(0, _trainingArea.GetMotionTotalFrame(motionIndex) - MaxStepInEpisode);
         }
 
         _terminatedFrame = -1;
@@ -284,7 +285,7 @@ public class MannequinAgent : Agent
 
         AddReward(totalReward);
 
-        if (_currentFrame == currentMotion.data.Count - 1 || _initFrame - _currentFrame >= 165)
+        if (_currentFrame == currentMotion.data.Count - 1 || _currentFrame - _initFrame >= MaxStepInEpisode)
         {
             _earlyTerminationStack = EarlyTerminationMax;
             _isTerminated = true;
