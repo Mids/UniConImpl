@@ -284,7 +284,7 @@ public class MannequinAgent : Agent
 
         AddReward(totalReward);
 
-        if (_currentFrame == currentMotion.data.Count - 1)
+        if (_currentFrame == currentMotion.data.Count - 1 || _initFrame - _currentFrame >= 165)
         {
             _earlyTerminationStack = EarlyTerminationMax;
             _isTerminated = true;
@@ -368,8 +368,6 @@ public class MannequinAgent : Agent
     private void EarlyTerminate()
     {
         if (++_earlyTerminationStack < EarlyTerminationMax) return;
-        if (_currentFrame > _initFrame + 100)
-            _terminatedFrame = _currentFrame;
         EndEpisode();
     }
 
