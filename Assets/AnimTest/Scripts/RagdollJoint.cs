@@ -82,8 +82,8 @@ public class RagdollJoint : MonoBehaviour
         }
 
         _ab.velocity = rootRot * targetJointData.velocity;
-        _ab.angularVelocity = Vector3.zero;
-        // _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+        // _ab.angularVelocity = Vector3.zero;
+        _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
     }
 
     private Vector3 LocalToReducedCoordinate(Quaternion local)

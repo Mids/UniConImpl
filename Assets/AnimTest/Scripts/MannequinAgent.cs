@@ -26,7 +26,7 @@ public class MannequinAgent : Agent
     private Vector3 _lastCOM = Vector3.zero;
     private int _terminatedFrame = -1;
 
-    private static readonly int[] FrameOffset = {1};
+    private static readonly int[] FrameOffset = {1, 4, 16};
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
