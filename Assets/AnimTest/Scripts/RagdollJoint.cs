@@ -72,6 +72,9 @@ public class RagdollJoint : MonoBehaviour
                 localTargetRot = targetJointData.rotation;
 
             var rc = LocalToReducedCoordinate(localTargetRot);
+            rc.x = Mathf.Clamp(rc.x, _ab.xDrive.lowerLimit, _ab.xDrive.upperLimit);
+            rc.y = Mathf.Clamp(rc.y, _ab.yDrive.lowerLimit, _ab.yDrive.upperLimit);
+            rc.z = Mathf.Clamp(rc.z, _ab.zDrive.lowerLimit, _ab.zDrive.upperLimit);
 
             if (dofCount == 3)
             {
