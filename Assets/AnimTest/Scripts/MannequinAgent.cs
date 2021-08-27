@@ -260,7 +260,7 @@ public class MannequinAgent : Agent
 
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
-        var distHead = (targetHead - curHead).magnitude;
+        var distHead = (targetHead - curHead).sqrMagnitude;
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor * (posReward + rotReward + velReward + comVelReward) / 4f;

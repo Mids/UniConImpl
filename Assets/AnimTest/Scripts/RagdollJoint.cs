@@ -60,6 +60,10 @@ public class RagdollJoint : MonoBehaviour
         if (_isRoot)
         {
             _ab.TeleportRoot(transform.parent.parent.position + targetJointData.position, targetJointData.rotation);
+
+            _ab.velocity = targetJointData.velocity;
+            // _ab.angularVelocity = Vector3.zero;
+            _ab.angularVelocity = targetJointData.angularVelocity;
         }
         else
         {
@@ -79,11 +83,11 @@ public class RagdollJoint : MonoBehaviour
                 _ab.jointPosition = new ArticulationReducedSpace(rc.z);
                 _ab.jointVelocity = new ArticulationReducedSpace(0);
             }
-        }
 
-        _ab.velocity = rootRot * targetJointData.velocity;
-        // _ab.angularVelocity = Vector3.zero;
-        _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+            _ab.velocity = rootRot * targetJointData.velocity;
+            // _ab.angularVelocity = Vector3.zero;
+            _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+        }
     }
 
     private Vector3 LocalToReducedCoordinate(Quaternion local)
@@ -197,12 +201,12 @@ public class RagdollJoint : MonoBehaviour
         // _parent._ab.AddTorque(-worldTorque);
         // _ab.AddTorque(worldTorque);
 
-        if (_ab.twistLock == ArticulationDofLock.LimitedMotion)
-            _ab.xDrive = SetTarget(_ab.xDrive, v.x);
         if (_ab.swingYLock == ArticulationDofLock.LimitedMotion)
             _ab.yDrive = SetTarget(_ab.yDrive, v.y);
         if (_ab.swingZLock == ArticulationDofLock.LimitedMotion)
             _ab.zDrive = SetTarget(_ab.zDrive, v.z);
+        if (_ab.twistLock == ArticulationDofLock.LimitedMotion)
+            _ab.xDrive = SetTarget(_ab.xDrive, v.x);
     }
 
     public void AddRelativeTorque(float x, float y, float z)
