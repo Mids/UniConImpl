@@ -27,7 +27,7 @@ public class MannequinAgent : Agent
     private int _terminatedFrame = -1;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
-    private static int MaxStepInEpisode = 200;
+    private static readonly int MaxStepInEpisode = 200;
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -245,15 +245,15 @@ public class MannequinAgent : Agent
             totalJointAvReward += jointAvReward;
         }
 
-        var comVelReward = GetComVelReward();
         posReward += totalJointPosReward / 5f;
         // rotReward += totalJointRotReward / 5f;
         velReward += totalJointVelReward / 5f;
         avReward += totalJointAvReward / 5f;
+        var comVelReward = GetComVelReward();
 
 
         posReward = Mathf.Exp(posReward * -1f);
-        rotReward = Mathf.Exp(rotReward / -4f);
+        rotReward = Mathf.Exp(rotReward / -1f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
         comVelReward = Mathf.Exp(comVelReward * -1f);
@@ -264,6 +264,9 @@ public class MannequinAgent : Agent
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor * (posReward + rotReward + velReward + comVelReward) / 4f;
+#if UNITY_EDITOR
+        print($"{distFactor} * ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 4f = {totalReward}");
+#endif // UNITY_EDITOR
 
         if (distHead > 1f || AgentTransforms[12].position.y < 0.3f)
         {
