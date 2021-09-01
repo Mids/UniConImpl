@@ -61,9 +61,10 @@ public class RagdollJoint : MonoBehaviour
         {
             _ab.TeleportRoot(transform.parent.parent.position + targetJointData.position, targetJointData.rotation);
 
-            _ab.velocity = targetJointData.velocity;
-            // _ab.angularVelocity = Vector3.zero;
-            _ab.angularVelocity = targetJointData.angularVelocity;
+            _ab.velocity = Vector3.zero;
+            // _ab.velocity = targetJointData.velocity;
+            _ab.angularVelocity = Vector3.zero;
+            // _ab.angularVelocity = targetJointData.angularVelocity;
         }
         else
         {
@@ -87,9 +88,10 @@ public class RagdollJoint : MonoBehaviour
                 _ab.jointVelocity = new ArticulationReducedSpace(0);
             }
 
-            _ab.velocity = rootRot * targetJointData.velocity;
-            // _ab.angularVelocity = Vector3.zero;
-            _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+            _ab.velocity = Vector3.zero;
+            // _ab.velocity = rootRot * targetJointData.velocity;
+            _ab.angularVelocity = Vector3.zero;
+            // _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
         }
     }
 
