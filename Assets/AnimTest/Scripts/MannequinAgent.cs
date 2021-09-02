@@ -246,14 +246,14 @@ public class MannequinAgent : Agent
         }
 
         posReward += totalJointPosReward / 5f;
-        // rotReward += totalJointRotReward / 5f;
+        rotReward += totalJointRotReward / 5f;
         velReward += totalJointVelReward / 5f;
         avReward += totalJointAvReward / 5f;
         var comVelReward = GetComVelReward();
 
 
         posReward = Mathf.Exp(posReward * -1f);
-        rotReward = Mathf.Exp(rotReward / -1f);
+        rotReward = Mathf.Exp(rotReward / -2f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
         comVelReward = Mathf.Exp(comVelReward * -1f);
