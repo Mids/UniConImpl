@@ -207,11 +207,11 @@ public class RagdollJoint : MonoBehaviour
         // _ab.AddTorque(worldTorque);
 
         if (_ab.swingYLock == ArticulationDofLock.LimitedMotion)
-            _ab.yDrive = SetTarget(_ab.yDrive, v.y);
+            _ab.yDrive = SetTarget(_ab.yDrive, v.y, powerVector.y);
         if (_ab.swingZLock == ArticulationDofLock.LimitedMotion)
-            _ab.zDrive = SetTarget(_ab.zDrive, v.z);
+            _ab.zDrive = SetTarget(_ab.zDrive, v.z, powerVector.z);
         if (_ab.twistLock == ArticulationDofLock.LimitedMotion)
-            _ab.xDrive = SetTarget(_ab.xDrive, v.x);
+            _ab.xDrive = SetTarget(_ab.xDrive, v.x, powerVector.x);
     }
 
     public void AddRelativeTorque(float x, float y, float z)
@@ -279,14 +279,14 @@ public class RagdollJoint : MonoBehaviour
         }
     }
 
-    private ArticulationDrive SetTarget(ArticulationDrive drive, float t)
+    private ArticulationDrive SetTarget(ArticulationDrive drive, float t, float stiff)
     {
         var lower = drive.lowerLimit;
         var upper = drive.upperLimit;
         var range = upper - lower;
         var target = lower + (t + 1) / 2 * range;
         drive.target = target;
-        drive.stiffness = stiffness;
+        drive.stiffness = stiff;
         drive.damping = damping;
         return drive;
     }
