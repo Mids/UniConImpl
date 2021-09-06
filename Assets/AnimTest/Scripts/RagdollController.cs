@@ -133,6 +133,8 @@ public class RagdollController : MonoBehaviour
 #if UNITY_EDITOR && RECORD_ACTION
         _sw = new StreamWriter("actionOutput.txt");
 #endif // UNITY_EDITOR && RECORD_ACTION
+        for (var i = 0; i < powerVectors.Length; i++)
+            powerVectors[i] *= 2;
     }
 
     private void SetParents()
