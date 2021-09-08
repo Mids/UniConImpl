@@ -197,11 +197,15 @@ public class MannequinAgent : Agent
 
         var targetRoot = targetPose.joints[0];
 
+        var projRoot = Vector3.ProjectOnPlane(rootRot * Vector3.forward, Vector3.up);
+        var projTargetRoot = Vector3.ProjectOnPlane(targetRoot.rotation * Vector3.forward, Vector3.up);
+        var projRootRot = Quaternion.FromToRotation(projRoot, projTargetRoot);
+
         // var posReward = rootPos.y - targetRoot.position.y;
         // posReward *= posReward;
         var posReward = (rootPos - targetRoot.position).magnitude;
 
-        var rotReward = Quaternion.Angle(rootRot, targetRoot.rotation) * Mathf.Deg2Rad;
+        var rotReward = 1 - Mathf.Abs((rootInv * targetRoot.rotation).w);
         // rotReward *= rotReward;
 
         var velReward = (rootAB.velocity - targetRoot.velocity).magnitude;
@@ -227,16 +231,17 @@ public class MannequinAgent : Agent
             var jointAB = AgentABs[index];
             var targetData = targetPose.joints[index];
 
-            var posDiff = rootInv * (jointT.position - root.position) - targetData.position;
+            var posDiff = projRootRot * (jointT.position - root.position) - targetRoot.rotation * targetData.position;
             var jointPosReward = posDiff.magnitude;
             totalJointPosReward += jointPosReward;
 
-            var rotDiff = Quaternion.Angle(rootInv * jointT.rotation, targetData.rotation);
-            var jointRotReward = rotDiff * Mathf.Deg2Rad;
+            var rotDiff = Quaternion.Inverse(projRootRot * jointT.rotation) * targetRoot.rotation * targetData.rotation;
+            var jointRotReward = 1 - rotDiff.w;
             // jointRotReward *= jointRotReward;
             totalJointRotReward += jointRotReward;
 
-            var velDiff = rootInv * (jointAB.velocity - rootAB.velocity) - targetData.velocity;
+            var velDiff = projRootRot * (jointAB.velocity - rootAB.velocity) -
+                          targetRoot.rotation * targetData.velocity;
             var jointVelReward = velDiff.magnitude;
             totalJointVelReward += jointVelReward;
 
@@ -253,7 +258,7 @@ public class MannequinAgent : Agent
 
 
         posReward = Mathf.Exp(posReward * -1f);
-        rotReward = Mathf.Exp(rotReward / -2f);
+        rotReward = Mathf.Exp(rotReward * -4f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
         comVelReward = Mathf.Exp(comVelReward * -1f);
