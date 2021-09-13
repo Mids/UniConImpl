@@ -235,10 +235,14 @@ public class MannequinAgent : Agent
             var jointPosReward = posDiff.magnitude;
             totalJointPosReward += jointPosReward;
 
-            var rotDiff = Quaternion.Inverse(projRootRot * jointT.rotation) * targetRoot.rotation * targetData.rotation;
-            var jointRotReward = 1 - rotDiff.w;
-            // jointRotReward *= jointRotReward;
-            totalJointRotReward += jointRotReward;
+            if (index == 3 || index == 6)
+            {
+                var rotDiff = Quaternion.Inverse(projRootRot * jointT.rotation) * targetRoot.rotation *
+                              targetData.rotation;
+                var jointRotReward = 1 - rotDiff.w;
+                // jointRotReward *= jointRotReward;
+                totalJointRotReward += jointRotReward;
+            }
 
             var velDiff = projRootRot * (jointAB.velocity - rootAB.velocity) -
                           targetRoot.rotation * targetData.velocity;
@@ -251,7 +255,7 @@ public class MannequinAgent : Agent
         }
 
         posReward += totalJointPosReward / 5f;
-        rotReward += totalJointRotReward / 5f;
+        rotReward += totalJointRotReward / 2f;
         velReward += totalJointVelReward / 5f;
         avReward += totalJointAvReward / 5f;
         var comVelReward = GetComVelReward();
