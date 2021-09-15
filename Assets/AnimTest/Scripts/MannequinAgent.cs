@@ -153,7 +153,7 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        AddReward((0.5f - forcePenalty) / 100);
+        // AddReward((0.5f - forcePenalty) / 100);
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -235,7 +235,7 @@ public class MannequinAgent : Agent
             var jointPosReward = posDiff.magnitude;
             totalJointPosReward += jointPosReward;
 
-            if (index == 3 || index == 6)
+            if (index == 3 || index == 6 || index == 12)
             {
                 var rotDiff = Quaternion.Inverse(projRootRot * jointT.rotation) * targetRoot.rotation *
                               targetData.rotation;
@@ -255,7 +255,7 @@ public class MannequinAgent : Agent
         }
 
         posReward += totalJointPosReward / 5f;
-        rotReward += totalJointRotReward / 2f;
+        rotReward += totalJointRotReward / 3f;
         velReward += totalJointVelReward / 5f;
         avReward += totalJointAvReward / 5f;
         var comVelReward = GetComVelReward();
@@ -301,6 +301,7 @@ public class MannequinAgent : Agent
         {
             _earlyTerminationStack = EarlyTerminationMax;
             _isTerminated = true;
+            AddReward(10);
         }
 
         if (_isTerminated) EarlyTerminate();
