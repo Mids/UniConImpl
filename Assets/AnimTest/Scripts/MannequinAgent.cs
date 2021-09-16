@@ -153,7 +153,7 @@ public class MannequinAgent : Agent
 
         SetReward(0);
         AddTargetStateReward();
-        // AddReward((0.5f - forcePenalty) / 100);
+        AddReward((0.5f - forcePenalty) / 100);
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
