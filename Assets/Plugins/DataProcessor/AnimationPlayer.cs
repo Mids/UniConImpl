@@ -15,7 +15,7 @@ namespace DataProcessor
 
         public float dt;
 
-        public void Start()
+        public void Awake()
         {
             Init();
         }
