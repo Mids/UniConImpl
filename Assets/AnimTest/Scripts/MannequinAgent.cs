@@ -25,6 +25,10 @@ public class MannequinAgent : Agent
     private bool _isInitialized = false;
     private Vector3 _lastCOM = Vector3.zero;
     private int _terminatedFrame = -1;
+    private const float InitVel = 0.5f;
+    public Vector3 targetRootPosition = Vector3.zero;
+    public float velocity = 0f;
+    private int _episodeCnt = 0;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
     private static readonly int MaxStepInEpisode = 200;
@@ -71,6 +75,9 @@ public class MannequinAgent : Agent
         _isInitialized = false;
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
+        ++_episodeCnt;
+        velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 10000f, InitVel, InitVel + 1f));
+        targetRootPosition = new Vector3(0, 0.74f, 0);
 
         var motionIndex = _trainingArea.GetRandomMotionIndex();
         if (_terminatedFrame > 0)
@@ -88,6 +95,7 @@ public class MannequinAgent : Agent
 #if UNITY_EDITOR
         _lastReward = 0;
         _RefAP.SetMotion(currentMotion);
+        _RefAP.JointTransforms[0].position = transform.position + targetRootPosition;
 #endif // UNITY_EDITOR
 
         // _initFrame = 0;
@@ -96,7 +104,7 @@ public class MannequinAgent : Agent
 
         _initPose = currentPose;
         Feet.ForEach(p => p.isContact = false);
-        _lastCOM = _initPose.joints[0].position + _initPose.centerOfMass;
+        _lastCOM = targetRootPosition + _initPose.centerOfMass;
 
         ResetAgentPose();
         StartCoroutine(WaitForInit());
@@ -121,7 +129,7 @@ public class MannequinAgent : Agent
         com /= totalMass;
         com += rootPos;
         var comDir = com - _lastCOM;
-        var targetCOM = currentPose.joints[0].rotation * currentPose.centerOfMass + currentPose.joints[0].position;
+        var targetCOM = currentPose.joints[0].rotation * currentPose.centerOfMass + targetRootPosition;
 
 
         sensor.AddObservation(Feet[0].isContact);
@@ -142,6 +150,8 @@ public class MannequinAgent : Agent
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
+            targetPose.joints[0].position = targetRootPosition + offset * velocity * Vector3.forward;
+            targetPose.joints[0].velocity = velocity * Vector3.forward;
 
             ragdollController.AddTargetObservation(sensor, targetPose);
         }
@@ -168,7 +178,7 @@ public class MannequinAgent : Agent
     {
         yield return new WaitForEndOfFrame();
         _episodeTime = 0f;
-        ragdollController.ResetRagdoll(_initPose);
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition);
         ragdollController.FreezeAll(false);
         RequestDecision();
         _isInitialized = true;
@@ -177,7 +187,7 @@ public class MannequinAgent : Agent
     private void ResetAgentPose()
     {
         ragdollController.FreezeAll(true);
-        ragdollController.ResetRagdoll(_initPose);
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition);
     }
 
 
@@ -203,12 +213,12 @@ public class MannequinAgent : Agent
 
         // var posReward = rootPos.y - targetRoot.position.y;
         // posReward *= posReward;
-        var posReward = (rootPos - targetRoot.position).magnitude;
+        var posReward = (rootPos - targetRootPosition).magnitude;
 
         var rotReward = 1 - Mathf.Abs((rootInv * targetRoot.rotation).w);
         // rotReward *= rotReward;
 
-        var velReward = (rootAB.velocity - targetRoot.velocity).magnitude;
+        var velReward = (rootAB.velocity - velocity * Vector3.forward).magnitude;
 
         var avReward = (rootAB.angularVelocity - targetRoot.angularVelocity).magnitude;
 
@@ -268,7 +278,7 @@ public class MannequinAgent : Agent
         comVelReward = Mathf.Exp(comVelReward * -1f);
 
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
-        var targetHead = targetRoot.position + targetRoot.rotation * targetPose.joints[12].position;
+        var targetHead = targetRootPosition + targetRoot.rotation * targetPose.joints[12].position;
         var distHead = (targetHead - curHead).sqrMagnitude;
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
@@ -342,9 +352,9 @@ public class MannequinAgent : Agent
 
             var curPose = currentMotion.data[curFrame];
             var lastPose = currentMotion.data[lastFrame];
-            var curCom = curPose.joints[0].position + curPose.joints[0].rotation * curPose.centerOfMass;
-            var lastCom = lastPose.joints[0].position + lastPose.joints[0].rotation * lastPose.centerOfMass;
-            var targetComVel = curCom - lastCom;
+            var curCom = curPose.joints[0].rotation * curPose.centerOfMass;
+            var lastCom = lastPose.joints[0].rotation * lastPose.centerOfMass;
+            var targetComVel = curCom - lastCom + velocity * Vector3.forward;
             targetComVel *= fps;
             targetComVel.y = 0;
 
@@ -400,6 +410,7 @@ public class MannequinAgent : Agent
             RequestDecision();
         }
 
+        targetRootPosition += velocity / fps * Vector3.forward;
         ragdollController.ApplyTorque();
     }
 
@@ -411,6 +422,8 @@ public class MannequinAgent : Agent
     private void Update()
     {
         _RefAP.SetPose(currentPose);
+        _RefAP.JointTransforms[0].position = targetRootPosition;
+
         ShowReward();
 
         if (drawDebugLine) DrawCOMAndFootContact();

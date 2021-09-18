@@ -55,11 +55,11 @@ public class RagdollJoint : MonoBehaviour
         targetJointData = data;
     }
 
-    public void ResetJoint(Quaternion rootRot)
+    public void ResetJoint(Quaternion rootRot, Vector3 rootPos)
     {
         if (_isRoot)
         {
-            _ab.TeleportRoot(transform.parent.parent.position + targetJointData.position, targetJointData.rotation);
+            _ab.TeleportRoot(transform.parent.parent.position + rootPos, targetJointData.rotation);
 
             _ab.velocity = Vector3.zero;
             // _ab.velocity = targetJointData.velocity;
@@ -88,10 +88,10 @@ public class RagdollJoint : MonoBehaviour
                 _ab.jointVelocity = new ArticulationReducedSpace(0);
             }
 
-            _ab.velocity = Vector3.zero;
-            // _ab.velocity = rootRot * targetJointData.velocity;
-            _ab.angularVelocity = Vector3.zero;
-            // _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
+            // _ab.velocity = Vector3.zero;
+            _ab.velocity = rootRot * targetJointData.velocity;
+            // _ab.angularVelocity = Vector3.zero;
+            _ab.angularVelocity = rootRot * targetJointData.angularVelocity;
         }
     }
 

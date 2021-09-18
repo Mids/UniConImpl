@@ -589,6 +589,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8789522655144303097, guid: 4d98cf8e6286f05489639915e7ce8e54,
         type: 3}
+      propertyPath: folderPath
+      value: WalkInPlace/Test
+      objectReference: {fileID: 0}
+    - target: {fileID: -8789522655144303097, guid: 4d98cf8e6286f05489639915e7ce8e54,
+        type: 3}
       propertyPath: animationClip
       value: 
       objectReference: {fileID: 7400000, guid: 1c99dffa3d81b934da09743c0b263552, type: 2}
