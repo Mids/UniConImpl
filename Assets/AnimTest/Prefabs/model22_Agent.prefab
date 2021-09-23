@@ -1649,6 +1649,8 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
+  targetRootPosition: {x: 0, y: 0, z: 0}
+  velocity: 0
   currentMotion: {fileID: 0}
   AgentMesh: {fileID: 3459228569474318186}
   fps: 30

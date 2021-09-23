@@ -25,7 +25,7 @@ public class MannequinAgent : Agent
     private bool _isInitialized = false;
     private Vector3 _lastCOM = Vector3.zero;
     private int _terminatedFrame = -1;
-    private const float InitVel = 0.5f;
+    private const float InitVel = 1f;
     public Vector3 targetRootPosition = Vector3.zero;
     public float velocity = 0f;
     private int _episodeCnt = 0;
@@ -76,6 +76,9 @@ public class MannequinAgent : Agent
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
         ++_episodeCnt;
+#if UNITY_EDITOR
+        _episodeCnt = 10000 * ((int) InitVel + 2);
+#endif // UNITY_EDITOR
         velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 10000f, InitVel, InitVel + 1f));
         targetRootPosition = new Vector3(0, 0.74f, 0);
 
