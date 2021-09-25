@@ -77,9 +77,9 @@ public class MannequinAgent : Agent
         _earlyTerminationStack = 0;
         ++_episodeCnt;
 #if UNITY_EDITOR
-        _episodeCnt = 10000 * ((int) InitVel + 2);
+        _episodeCnt = 5000 * ((int) InitVel + 2);
 #endif // UNITY_EDITOR
-        velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 10000f, InitVel, InitVel + 1f));
+        velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 5000f, InitVel, InitVel + 1f));
         targetRootPosition = new Vector3(0, 0.74f, 0);
 
         var motionIndex = _trainingArea.GetRandomMotionIndex();
