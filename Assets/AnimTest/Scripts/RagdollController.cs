@@ -24,7 +24,7 @@ public class RagdollController : MonoBehaviour
     private StreamWriter _sw;
 #endif // UNITY_EDITOR && RECORD_ACTION
 
-    public void ResetRagdoll(SkeletonData skeleton, Vector3 rootPos)
+    public void ResetRagdoll(SkeletonData skeleton, Vector3 rootPos, Vector3 rootVel)
     {
         _savedActionsArray = default;
         for (var i = 0; i < _lastActionsArray?.Length; i++) _lastActionsArray[i] = 0f;
@@ -39,7 +39,7 @@ public class RagdollController : MonoBehaviour
             _joints[i].damping = allDamping;
             _joints[i].powerVector = powerVectors[i];
             _joints[i].SetTargetJoint(skeleton.joints[i]);
-            _joints[i].ResetJoint(skeleton.joints[0].rotation, rootPos);
+            _joints[i].ResetJoint(skeleton.joints[0].rotation, rootPos, rootVel);
         }
     }
 

@@ -181,7 +181,7 @@ public class MannequinAgent : Agent
     {
         yield return new WaitForEndOfFrame();
         _episodeTime = 0f;
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition);
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0,0,velocity));
         ragdollController.FreezeAll(false);
         RequestDecision();
         _isInitialized = true;
@@ -190,7 +190,7 @@ public class MannequinAgent : Agent
     private void ResetAgentPose()
     {
         ragdollController.FreezeAll(true);
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition);
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0,0,velocity));
     }
 
 

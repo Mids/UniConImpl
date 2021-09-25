@@ -55,13 +55,13 @@ public class RagdollJoint : MonoBehaviour
         targetJointData = data;
     }
 
-    public void ResetJoint(Quaternion rootRot, Vector3 rootPos)
+    public void ResetJoint(Quaternion rootRot, Vector3 rootPos, Vector3 rootVel)
     {
         if (_isRoot)
         {
             _ab.TeleportRoot(transform.parent.parent.position + rootPos, targetJointData.rotation);
 
-            _ab.velocity = Vector3.zero;
+            _ab.velocity = rootVel;
             // _ab.velocity = targetJointData.velocity;
             _ab.angularVelocity = Vector3.zero;
             // _ab.angularVelocity = targetJointData.angularVelocity;
