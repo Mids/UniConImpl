@@ -4,8 +4,7 @@
 Unity version: 2020.3.2f1
 
 ## ML-Agents Versions
----
-|Package Name|Version|
+Package|Version
 |---|---|
 com.unity.ml-agents (C#)|v1.6.0
 ml-agents (Python)|v0.22.0
