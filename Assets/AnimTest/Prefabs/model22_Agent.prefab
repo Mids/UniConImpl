@@ -1100,6 +1100,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 421034056729770602}
   m_maskType: 0
+  _SortingLayer: 0
   _SortingLayerID: 0
   _SortingOrder: 0
 --- !u!65 &7536141764607140349
@@ -1620,7 +1621,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 719
+    VectorObservationSize: 705
     NumStackedVectorObservations: 1
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
