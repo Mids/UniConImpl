@@ -413,7 +413,16 @@ public class MannequinAgent : Agent
             RequestDecision();
         }
 
-        targetRootPosition += velocity / fps * Vector3.forward;
+        {
+            var root = AgentTransforms[0];
+            var rootAB = AgentABs[0];
+            var rootParent = root.parent;
+            var parentRot = rootParent.rotation;
+            var rootPos = rootParent.localPosition + parentRot * root.localPosition;
+            var nextPos = rootPos + velocity / fps * Vector3.forward;
+            nextPos.y = targetRootPosition.y;
+            targetRootPosition = nextPos;
+        }
         ragdollController.ApplyTorque();
     }
 
