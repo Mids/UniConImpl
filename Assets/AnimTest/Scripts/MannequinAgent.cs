@@ -50,7 +50,10 @@ public class MannequinAgent : Agent
 
     public bool drawDebugLine;
     private float _lastReward = 0;
-    private AnimationPlayer _RefAP;
+    public GameObject RefPrefab;
+    public int RefCount;
+    public int RefInterval;
+    private readonly List<AnimationPlayer> _RefAP = new List<AnimationPlayer>();
 #endif // UNITY_EDITOR
 
     #region ML-Agents
@@ -60,7 +63,9 @@ public class MannequinAgent : Agent
         base.Initialize();
         _trainingArea = GetComponentInParent<TrainingArea>();
 #if UNITY_EDITOR
-        _RefAP = GetComponentInChildren<AnimationPlayer>();
+        for (int i = 0; i < RefCount; ++i)
+            _RefAP.Add(Instantiate(RefPrefab, Vector3.zero, Quaternion.identity, transform)
+                .GetComponent<AnimationPlayer>());
 #endif // UNITY_EDITOR
 
         ragdollController = GetComponent<RagdollController>();
@@ -97,8 +102,11 @@ public class MannequinAgent : Agent
 
 #if UNITY_EDITOR
         _lastReward = 0;
-        _RefAP.SetMotion(currentMotion);
-        _RefAP.JointTransforms[0].position = transform.position + targetRootPosition;
+        for (int i = 0; i < RefCount; ++i)
+        {
+            _RefAP[i].SetMotion(currentMotion);
+            _RefAP[i].JointTransforms[0].position = transform.position + targetRootPosition;
+        }
 #endif // UNITY_EDITOR
 
         // _initFrame = 0;
@@ -181,7 +189,7 @@ public class MannequinAgent : Agent
     {
         yield return new WaitForEndOfFrame();
         _episodeTime = 0f;
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0,0,velocity));
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0, 0, velocity));
         ragdollController.FreezeAll(false);
         RequestDecision();
         _isInitialized = true;
@@ -190,7 +198,7 @@ public class MannequinAgent : Agent
     private void ResetAgentPose()
     {
         ragdollController.FreezeAll(true);
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0,0,velocity));
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0, 0, velocity));
     }
 
 
@@ -433,8 +441,14 @@ public class MannequinAgent : Agent
 
     private void Update()
     {
-        _RefAP.SetPose(currentPose);
-        _RefAP.JointTransforms[0].position = targetRootPosition;
+        for (int i = 0; i < RefCount; ++i)
+        {
+            var gap = i * RefInterval;
+            var targetFrame = Mathf.Clamp(_currentFrame + gap, 0, _initFrame + MaxStepInEpisode);
+            gap = targetFrame - _currentFrame;
+            _RefAP[i].SetPose(currentMotion.data[targetFrame]);
+            _RefAP[i].JointTransforms[0].position = targetRootPosition + gap * velocity / fps * Vector3.forward;
+        }
 
         ShowReward();
 
