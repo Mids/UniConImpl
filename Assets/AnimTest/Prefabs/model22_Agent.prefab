@@ -1620,12 +1620,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 711
+    VectorObservationSize: 707
     NumStackedVectorObservations: 1
     VectorActionSize: 1c000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: c0f11ec8a848d8947b0064efe8e233d0, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: AnimTest
@@ -1662,8 +1662,8 @@ MonoBehaviour:
   drawDebugLine: 1
   RefPrefab: {fileID: 9092087185695734970, guid: df9ee58f3bb4a714888e51e926c98f27,
     type: 3}
-  RefCount: 10
-  RefInterval: 8
+  RefCount: 5
+  RefInterval: 10
 --- !u!114 &2668225794112271936
 MonoBehaviour:
   m_ObjectHideFlags: 0

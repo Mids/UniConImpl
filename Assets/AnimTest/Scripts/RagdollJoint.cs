@@ -130,7 +130,7 @@ public class RagdollJoint : MonoBehaviour
             _rootVelocity = _ab.velocity;
             _rootAngularVelocity = _ab.angularVelocity;
 
-            sensor.AddObservation(_rootPos);
+            // sensor.AddObservation(_rootPos);
             sensor.AddObservation(_rootPos.y);
             sensor.AddObservation(_rootRot);
             sensor.AddObservation(_rootInv * _rootVelocity);

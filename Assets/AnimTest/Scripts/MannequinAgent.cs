@@ -143,20 +143,18 @@ public class MannequinAgent : Agent
         var targetCOM = currentPose.joints[0].rotation * currentPose.centerOfMass + targetRootPosition;
 
 
-        // sensor.AddObservation(Feet[0].isContact);
-        // sensor.AddObservation(Feet[1].isContact);
+        sensor.AddObservation(Feet[0].isContact);
+        sensor.AddObservation(Feet[1].isContact);
         // sensor.AddObservation(com);
         // sensor.AddObservation(comDir * fps);
-        sensor.AddObservation(targetCOM);
+        // sensor.AddObservation(targetCOM);
         sensor.AddObservation(targetCOM - com);
 
 
-        // 191 + 573 = 764
-        // Current State 11 + 180 = 191
         if (!ragdollController.OnCollectObservations(sensor))
             _isTerminated = true;
 
-        // Target State (11 + 180) * 3 = 573
+
         foreach (var offset in FrameOffset)
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
@@ -293,9 +291,15 @@ public class MannequinAgent : Agent
         var distHead = (targetHead - curHead).sqrMagnitude;
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
-        var totalReward = distFactor * (posReward + rotReward + velReward + comVelReward) / 4f;
+        var totalReward = distFactor / 2f;
+        if (distFactor > 0.5f)
+            totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
+
 #if UNITY_EDITOR
-        print($"{distFactor} * ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 4f = {totalReward}");
+        if (distFactor < 0.5f)
+            print($"{distFactor}");
+        else
+            print($"{distFactor} + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
 #endif // UNITY_EDITOR
 
         if (distHead > 1f || AgentTransforms[12].position.y < 0.3f)
