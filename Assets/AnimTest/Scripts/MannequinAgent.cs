@@ -28,10 +28,11 @@ public class MannequinAgent : Agent
     private const float InitVel = 1f;
     public Vector3 targetRootPosition = Vector3.zero;
     public float velocity = 0f;
+    public float accel;
     private int _episodeCnt = 0;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
-    private static readonly int MaxStepInEpisode = 200;
+    private static readonly int MaxStepInEpisode = 250;
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -84,7 +85,8 @@ public class MannequinAgent : Agent
 #if UNITY_EDITOR
         _episodeCnt = 5000 * ((int) InitVel + 2);
 #endif // UNITY_EDITOR
-        velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 5000f, InitVel, InitVel + 1f));
+        // velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 5000f, InitVel, InitVel + 1f));
+        velocity = 0f;
         targetRootPosition = new Vector3(0, 0.74f, 0);
 
         var motionIndex = _trainingArea.GetRandomMotionIndex();
@@ -299,7 +301,8 @@ public class MannequinAgent : Agent
         if (distFactor < 0.5f)
             print($"{distFactor}");
         else
-            print($"{distFactor} + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
+            print(
+                $"{distFactor} / 2 + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
 #endif // UNITY_EDITOR
 
         if (distHead > 1f || AgentTransforms[12].position.y < 0.3f)
@@ -422,6 +425,8 @@ public class MannequinAgent : Agent
         if (curFrame != _currentFrame)
         {
             _currentFrame = curFrame;
+            if (_currentFrame - _initFrame == 100)
+                velocity = 2f;
             RequestDecision();
         }
 
