@@ -28,11 +28,12 @@ public class MannequinAgent : Agent
     private const float InitVel = 1f;
     public Vector3 targetRootPosition = Vector3.zero;
     public float velocity = 0f;
+
     public float accel;
-    private int _episodeCnt = 0;
+    // private int _episodeCnt = 0;
 
     private static readonly int[] FrameOffset = {1, 4, 16};
-    private static readonly int MaxStepInEpisode = 250;
+    private static readonly int MaxStepInEpisode = 1000;
 
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
@@ -81,9 +82,9 @@ public class MannequinAgent : Agent
         _isInitialized = false;
         _episodeTime = 0f;
         _earlyTerminationStack = 0;
-        ++_episodeCnt;
+        // ++_episodeCnt;
 #if UNITY_EDITOR
-        _episodeCnt = 5000 * ((int) InitVel + 2);
+        // _episodeCnt = 5000 * ((int) InitVel + 2);
 #endif // UNITY_EDITOR
         // velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 5000f, InitVel, InitVel + 1f));
         velocity = 0f;
@@ -425,8 +426,18 @@ public class MannequinAgent : Agent
         if (curFrame != _currentFrame)
         {
             _currentFrame = curFrame;
-            if (_currentFrame - _initFrame == 100)
+
+#if UNITY_EDITOR
+            if(Input.GetKey(KeyCode.UpArrow))
                 velocity = 2f;
+            else
+            {
+                velocity = 0f;
+            }
+#else
+            if ((_currentFrame - _initFrame) % 200 == 0)
+                velocity = velocity < 1f ? 2f : 0f;
+#endif
             RequestDecision();
         }
 
