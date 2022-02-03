@@ -162,7 +162,7 @@ public class MannequinAgent : Agent
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
-            targetPose.joints[0].position = targetRootPosition + offset * velocity * Vector3.forward;
+            targetPose.joints[0].position = targetRootPosition + offset * velocity / fps * Vector3.forward;
             targetPose.joints[0].velocity = velocity * Vector3.forward;
 
             ragdollController.AddTargetObservation(sensor, targetPose);
@@ -291,19 +291,19 @@ public class MannequinAgent : Agent
 
         var curHead = AgentTransforms[12].position - rootParent.parent.position;
         var targetHead = targetRootPosition + targetRoot.rotation * targetPose.joints[12].position;
-        var distHead = (targetHead - curHead).sqrMagnitude;
+        var distHead = (targetHead - curHead).magnitude;
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor / 2f;
-        if (distFactor > 0.5f)
+        if (distFactor > 0.8f && rootAB.velocity.z * velocity >= 0f)
             totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
 
 #if UNITY_EDITOR
-        if (distFactor < 0.5f)
-            print($"{distFactor}");
-        else
+        if (distFactor > 0.8f && rootAB.velocity.z * velocity >= 0f)
             print(
                 $"{distFactor} / 2 + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
+        else
+            print($"{distFactor}");
 #endif // UNITY_EDITOR
 
         if (distHead > 1f || AgentTransforms[12].position.y < 0.3f)
@@ -371,11 +371,16 @@ public class MannequinAgent : Agent
 
             var curPose = currentMotion.data[curFrame];
             var lastPose = currentMotion.data[lastFrame];
-            var curCom = curPose.joints[0].rotation * curPose.centerOfMass;
-            var lastCom = lastPose.joints[0].rotation * lastPose.centerOfMass;
-            var targetComVel = curCom - lastCom + velocity * Vector3.forward;
+            var curCom = curPose.joints[0].position + curPose.joints[0].rotation * curPose.centerOfMass;
+            var lastCom = lastPose.joints[0].position + lastPose.joints[0].rotation * lastPose.centerOfMass;
+            var targetComVel = curCom - lastCom;
+            targetComVel += velocity / fps * Vector3.forward;
             targetComVel *= fps;
             targetComVel.y = 0;
+
+
+            // TODO: com vel reward is wrong
+            targetComVel = velocity * Vector3.forward;
 
             var diff = comVel - targetComVel;
 
@@ -428,12 +433,10 @@ public class MannequinAgent : Agent
             _currentFrame = curFrame;
 
 #if UNITY_EDITOR
-            if(Input.GetKey(KeyCode.UpArrow))
+            if (Input.GetKey(KeyCode.UpArrow))
                 velocity = 2f;
             else
-            {
                 velocity = 0f;
-            }
 #else
             if ((_currentFrame - _initFrame) % 200 == 0)
                 velocity = velocity < 1f ? 2f : 0f;
