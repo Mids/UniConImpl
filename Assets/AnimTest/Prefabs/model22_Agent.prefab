@@ -1650,6 +1650,8 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5000
   targetRootPosition: {x: 0, y: 0, z: 0}
+  direction: {x: 0, y: 0, z: 1}
+  directionAngularVelocity: 0
   velocity: 0
   accel: 1
   currentMotion: {fileID: 0}

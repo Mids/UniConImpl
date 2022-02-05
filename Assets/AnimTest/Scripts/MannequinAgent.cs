@@ -28,6 +28,8 @@ public class MannequinAgent : Agent
     private const float InitVel = 1f;
     public Vector3 targetRootPosition = Vector3.zero;
     public float velocity = 0f;
+    public Vector3 direction = Vector3.forward;
+    public float directionAngularVelocity = 0f;
 
     public float accel;
     // private int _episodeCnt = 0;
@@ -38,6 +40,7 @@ public class MannequinAgent : Agent
     public MotionData currentMotion;
     private SkeletonData currentPose => currentMotion.data[_currentFrame];
     private SkeletonData _initPose;
+    private Quaternion _initRotation;
     public GameObject AgentMesh;
     public float fps = 30f;
 
@@ -75,6 +78,7 @@ public class MannequinAgent : Agent
         AgentABs = AgentMesh.GetComponentsInChildren<ArticulationBody>().ToList();
         AgentTransforms = AgentABs.Select(p => p.transform).ToList();
         Feet = AgentMesh.GetComponentsInChildren<FootContact>().ToList();
+        _initRotation = AgentTransforms[0].rotation;
     }
 
     public override void OnEpisodeBegin()
@@ -88,6 +92,8 @@ public class MannequinAgent : Agent
 #endif // UNITY_EDITOR
         // velocity = Random.Range(InitVel, Mathf.Clamp(_episodeCnt / 5000f, InitVel, InitVel + 1f));
         velocity = 0f;
+        direction = Vector3.forward;
+        directionAngularVelocity = 0f;
         targetRootPosition = new Vector3(0, 0.74f, 0);
 
         var motionIndex = _trainingArea.GetRandomMotionIndex();
@@ -157,13 +163,15 @@ public class MannequinAgent : Agent
         if (!ragdollController.OnCollectObservations(sensor))
             _isTerminated = true;
 
-
         foreach (var offset in FrameOffset)
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
-            targetPose.joints[0].position = targetRootPosition + offset * velocity / fps * Vector3.forward;
-            targetPose.joints[0].velocity = velocity * Vector3.forward;
+            var targetDirection = Quaternion.AngleAxis(offset * directionAngularVelocity, Vector3.up) * direction;
+            targetPose.joints[0].position = GetTargetPositionFor(offset, targetRootPosition, direction);
+            targetPose.joints[0].velocity = velocity * targetDirection;
+            targetPose.joints[0].rotation = Quaternion.LookRotation(targetDirection) * _initRotation;
+            // targetPose.joints[0].angularVelocity = new Vector3(0, directionAngularVelocity, 0);
 
             ragdollController.AddTargetObservation(sensor, targetPose);
         }
@@ -190,7 +198,7 @@ public class MannequinAgent : Agent
     {
         yield return new WaitForEndOfFrame();
         _episodeTime = 0f;
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0, 0, velocity));
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, velocity * direction);
         ragdollController.FreezeAll(false);
         RequestDecision();
         _isInitialized = true;
@@ -199,7 +207,7 @@ public class MannequinAgent : Agent
     private void ResetAgentPose()
     {
         ragdollController.FreezeAll(true);
-        ragdollController.ResetRagdoll(_initPose, targetRootPosition, new Vector3(0, 0, velocity));
+        ragdollController.ResetRagdoll(_initPose, targetRootPosition, velocity * direction);
     }
 
 
@@ -230,7 +238,7 @@ public class MannequinAgent : Agent
         var rotReward = 1 - Mathf.Abs((rootInv * targetRoot.rotation).w);
         // rotReward *= rotReward;
 
-        var velReward = (rootAB.velocity - velocity * Vector3.forward).magnitude;
+        var velReward = (rootAB.velocity - velocity * direction).magnitude;
 
         var avReward = (rootAB.angularVelocity - targetRoot.angularVelocity).magnitude;
 
@@ -295,11 +303,11 @@ public class MannequinAgent : Agent
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor / 2f;
-        if (distFactor > 0.8f && rootAB.velocity.z * velocity >= 0f)
+        if (distFactor > 0.8f && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f)
             totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
 
 #if UNITY_EDITOR
-        if (distFactor > 0.8f && rootAB.velocity.z * velocity >= 0f)
+        if (distFactor > 0.8f && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f)
             print(
                 $"{distFactor} / 2 + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
         else
@@ -380,12 +388,23 @@ public class MannequinAgent : Agent
 
 
             // TODO: com vel reward is wrong
-            targetComVel = velocity * Vector3.forward;
+            targetComVel = velocity * direction;
 
             var diff = comVel - targetComVel;
 
             return diff.magnitude;
         }
+    }
+
+    private Vector3 GetTargetPositionFor(int offset, Vector3 current, Vector3 direction)
+    {
+        if (offset == 0)
+            return current;
+
+        return GetTargetPositionFor(offset - 1,
+            current + velocity / fps * direction,
+            Quaternion.AngleAxis(directionAngularVelocity, Vector3.up) * direction
+        );
     }
 
     private static float Sign(Vector3 p1, Vector3 p2, Vector3 p3)
@@ -432,15 +451,19 @@ public class MannequinAgent : Agent
         {
             _currentFrame = curFrame;
 
-#if UNITY_EDITOR
-            if (Input.GetKey(KeyCode.UpArrow))
+// #if UNITY_EDITOR
+//             if (Input.GetKey(KeyCode.UpArrow))
+//                 velocity = 2f;
+//             else
+//                 velocity = 0f;
+// #else
+            var elapsedFrame = _currentFrame - _initFrame;
+            if (elapsedFrame == 200)
                 velocity = 2f;
-            else
-                velocity = 0f;
-#else
-            if ((_currentFrame - _initFrame) % 200 == 0)
-                velocity = velocity < 1f ? 2f : 0f;
-#endif
+            else if (elapsedFrame == 400)
+                directionAngularVelocity = -1f;
+
+            // #endif
             RequestDecision();
         }
 
@@ -450,7 +473,8 @@ public class MannequinAgent : Agent
             var rootParent = root.parent;
             var parentRot = rootParent.rotation;
             var rootPos = rootParent.localPosition + parentRot * root.localPosition;
-            var nextPos = rootPos + velocity / fps * Vector3.forward;
+            direction = Quaternion.AngleAxis(directionAngularVelocity, Vector3.up) * direction;
+            var nextPos = rootPos + velocity / fps * direction;
             nextPos.y = targetRootPosition.y;
             targetRootPosition = nextPos;
         }
@@ -464,13 +488,20 @@ public class MannequinAgent : Agent
 
     private void Update()
     {
+        var root = AgentTransforms[0];
+        var rootAB = AgentABs[0];
+        var rootParent = root.parent;
+        var parentRot = rootParent.rotation;
+
         for (int i = 0; i < RefCount; ++i)
         {
-            var gap = i * RefInterval;
-            var targetFrame = Mathf.Clamp(_currentFrame + gap, 0, _initFrame + MaxStepInEpisode);
-            gap = targetFrame - _currentFrame;
+            var offset = i * RefInterval;
+            var targetFrame = Mathf.Clamp(_currentFrame + offset, 0, _initFrame + MaxStepInEpisode);
+            var targetDirection = Quaternion.AngleAxis(offset * directionAngularVelocity, Vector3.up) * direction;
+            offset = targetFrame - _currentFrame;
             _RefAP[i].SetPose(currentMotion.data[targetFrame]);
-            _RefAP[i].JointTransforms[0].position = targetRootPosition + gap * velocity / fps * Vector3.forward;
+            _RefAP[i].JointTransforms[0].position = GetTargetPositionFor(offset, targetRootPosition, direction);
+            _RefAP[i].JointTransforms[0].rotation = Quaternion.LookRotation(targetDirection) * _initRotation;
         }
 
         ShowReward();
