@@ -167,11 +167,13 @@ public class MannequinAgent : Agent
         {
             var targetFrame = Mathf.Min(_currentFrame + offset, currentMotion.data.Count - 1);
             var targetPose = currentMotion.data[targetFrame];
+            targetPose.joints = (JointData[]) targetPose.joints.Clone();
             var targetDirection = Quaternion.AngleAxis(offset * directionAngularVelocity, Vector3.up) * direction;
+
             targetPose.joints[0].position = GetTargetPositionFor(offset, targetRootPosition, direction);
             targetPose.joints[0].velocity = velocity * targetDirection;
-            targetPose.joints[0].rotation = Quaternion.LookRotation(targetDirection) * _initRotation;
-            // targetPose.joints[0].angularVelocity = new Vector3(0, directionAngularVelocity, 0);
+            targetPose.joints[0].rotation = Quaternion.LookRotation(targetDirection) * targetPose.joints[0].rotation;
+            targetPose.joints[0].angularVelocity += new Vector3(0, directionAngularVelocity, 0);
 
             ragdollController.AddTargetObservation(sensor, targetPose);
         }
@@ -500,8 +502,9 @@ public class MannequinAgent : Agent
             var targetDirection = Quaternion.AngleAxis(offset * directionAngularVelocity, Vector3.up) * direction;
             offset = targetFrame - _currentFrame;
             _RefAP[i].SetPose(currentMotion.data[targetFrame]);
-            _RefAP[i].JointTransforms[0].position = GetTargetPositionFor(offset, targetRootPosition, direction);
-            _RefAP[i].JointTransforms[0].rotation = Quaternion.LookRotation(targetDirection) * _initRotation;
+            _RefAP[i].JointTransforms[0].position = rootParent.parent.position +
+                                                    GetTargetPositionFor(offset, targetRootPosition, direction);
+            _RefAP[i].JointTransforms[0].rotation = Quaternion.LookRotation(targetDirection) * _RefAP[i].JointTransforms[0].rotation;
         }
 
         ShowReward();
