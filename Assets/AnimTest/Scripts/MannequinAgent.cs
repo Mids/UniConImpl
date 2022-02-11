@@ -462,8 +462,8 @@ public class MannequinAgent : Agent
             var elapsedFrame = _currentFrame - _initFrame;
             if (elapsedFrame == 200)
                 velocity = 2f;
-            else if (elapsedFrame == 400)
-                directionAngularVelocity = -1f;
+            else if (elapsedFrame % 400 == 399)
+                directionAngularVelocity = Random.Range(-1, 2);
 
             // #endif
             RequestDecision();
