@@ -311,7 +311,7 @@ public class MannequinAgent : Agent
             totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
 
 #if UNITY_EDITOR
-        Debug.DrawLine(root.position, root.position + root.up * 10, Color.magenta, 1f);
+        Debug.DrawLine(root.position, root.position + root.up * 10, Color.magenta);
         if (distFactor > 0.8f
             && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f
             && Vector3.Dot(root.up, direction) >= 0f)
@@ -515,7 +515,7 @@ public class MannequinAgent : Agent
 
         ShowReward();
 
-        if (drawDebugLine) DrawCOMAndFootContact();
+        // if (drawDebugLine) DrawCOMAndFootContact();
     }
 
     private void ShowReward()

@@ -28,7 +28,7 @@ public class TrainingArea : MonoBehaviour
 #else
         int size = 5;
 #endif
-        int gap = 20;
+        int gap = 50;
         for (var i = 0; i < size; ++i)
         for (var j = 0; j < size; ++j)
             Instantiate(AgentPrefab, new Vector3(
