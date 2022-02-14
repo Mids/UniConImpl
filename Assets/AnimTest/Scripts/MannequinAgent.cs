@@ -305,11 +305,16 @@ public class MannequinAgent : Agent
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
         var totalReward = distFactor / 2f;
-        if (distFactor > 0.8f && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f)
+        if (distFactor > 0.8f
+            && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f
+            && Vector3.Dot(root.up, direction) >= 0f)
             totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
 
 #if UNITY_EDITOR
-        if (distFactor > 0.8f && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f)
+        Debug.DrawLine(root.position, root.position + root.up * 10, Color.magenta, 1f);
+        if (distFactor > 0.8f
+            && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f
+            && Vector3.Dot(root.up, direction) >= 0f)
             print(
                 $"{distFactor} / 2 + ({posReward} + {rotReward} + {velReward} + {comVelReward}) / 8f = {totalReward}");
         else
@@ -504,7 +509,8 @@ public class MannequinAgent : Agent
             _RefAP[i].SetPose(currentMotion.data[targetFrame]);
             _RefAP[i].JointTransforms[0].position = rootParent.parent.position +
                                                     GetTargetPositionFor(offset, targetRootPosition, direction);
-            _RefAP[i].JointTransforms[0].rotation = Quaternion.LookRotation(targetDirection) * _RefAP[i].JointTransforms[0].rotation;
+            _RefAP[i].JointTransforms[0].rotation =
+                Quaternion.LookRotation(targetDirection) * _RefAP[i].JointTransforms[0].rotation;
         }
 
         ShowReward();
