@@ -1,4 +1,4 @@
-﻿#define RECORD_ACTION
+﻿// #define RECORD_ACTION
 
 using System.Collections.Generic;
 using System.IO;
