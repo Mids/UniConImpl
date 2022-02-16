@@ -216,6 +216,9 @@ public class MannequinAgent : Agent
     private void AddTargetStateReward()
     {
         var targetPose = currentPose;
+        targetPose.joints = (JointData[]) targetPose.joints.Clone();
+        targetPose.joints[0].rotation =
+            Quaternion.LookRotation(direction, Vector3.up) * targetPose.joints[0].rotation;
 
         _isTerminated = false;
 
@@ -269,8 +272,7 @@ public class MannequinAgent : Agent
 
             if (index == 3 || index == 6 || index == 12)
             {
-                var rotDiff = Quaternion.Inverse(projRootRot * jointT.rotation) * targetRoot.rotation *
-                              targetData.rotation;
+                var rotDiff = Quaternion.Inverse(rootInv * jointT.rotation) * targetData.rotation;
                 var jointRotReward = 1 - rotDiff.w;
                 // jointRotReward *= jointRotReward;
                 totalJointRotReward += jointRotReward;
@@ -294,7 +296,7 @@ public class MannequinAgent : Agent
 
 
         posReward = Mathf.Exp(posReward * -1f);
-        rotReward = Mathf.Exp(rotReward * -4f);
+        rotReward = Mathf.Exp(rotReward * -2f);
         velReward = Mathf.Exp(velReward / -10f);
         avReward = Mathf.Exp(avReward / -20f);
         comVelReward = Mathf.Exp(comVelReward * -1f);
@@ -311,7 +313,11 @@ public class MannequinAgent : Agent
             totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
 
 #if UNITY_EDITOR
-        Debug.DrawLine(root.position, root.position + root.up * 10, Color.magenta);
+        var rootWorldPos = root.position;
+        Debug.DrawLine(rootWorldPos, rootWorldPos + Vector3.ProjectOnPlane(
+            Quaternion.Inverse(_initRotation) * rootRot * Vector3.forward,
+            Vector3.up) * 10, Color.magenta);
+        Debug.DrawLine(rootWorldPos, rootWorldPos + direction * 10, Color.cyan);
         if (distFactor > 0.8f
             && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f
             && Vector3.Dot(root.up, direction) >= 0f)
