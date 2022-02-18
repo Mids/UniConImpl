@@ -306,11 +306,11 @@ public class MannequinAgent : Agent
         var distHead = (targetHead - curHead).magnitude;
         var distFactor = Mathf.Clamp(1.1f - 1.2f * distHead, 0f, 1f);
 
-        var totalReward = distFactor / 2f;
+        var totalReward = distFactor / 5f;
         if (distFactor > 0.8f
             && Vector3.Dot(rootAB.velocity, velocity * direction) >= 0f
             && Vector3.Dot(root.up, direction) >= 0f)
-            totalReward += (posReward + rotReward + velReward + comVelReward) / 8f;
+            totalReward += (posReward + rotReward + velReward + comVelReward) / 5f;
 
 #if UNITY_EDITOR
         var rootWorldPos = root.position;
@@ -469,12 +469,24 @@ public class MannequinAgent : Agent
 //                 velocity = 2f;
 //             else
 //                 velocity = 0f;
+//
+//             if (Input.GetKey(KeyCode.LeftArrow))
+//                 directionAngularVelocity = -1f;
+//             else if (Input.GetKey(KeyCode.RightArrow))
+//                 directionAngularVelocity = 1f;
+//             else
+//                 directionAngularVelocity = 0f;
 // #else
             var elapsedFrame = _currentFrame - _initFrame;
             if (elapsedFrame == 200)
                 velocity = 2f;
-            else if (elapsedFrame % 400 == 399)
+            else if (elapsedFrame == 400)
                 directionAngularVelocity = Random.Range(-1, 2);
+            else if (elapsedFrame % 200 == 0)
+            {
+                velocity = Random.Range(0, 2) * 2;
+                directionAngularVelocity = Random.Range(-1, 2);
+            }
 
             // #endif
             RequestDecision();
