@@ -464,19 +464,21 @@ public class MannequinAgent : Agent
         {
             _currentFrame = curFrame;
 
-// #if UNITY_EDITOR
-//             if (Input.GetKey(KeyCode.UpArrow))
-//                 velocity = 2f;
-//             else
-//                 velocity = 0f;
-//
-//             if (Input.GetKey(KeyCode.LeftArrow))
-//                 directionAngularVelocity = -1f;
-//             else if (Input.GetKey(KeyCode.RightArrow))
-//                 directionAngularVelocity = 1f;
-//             else
-//                 directionAngularVelocity = 0f;
-// #else
+#if UNITY_EDITOR
+            if (Input.GetKey(KeyCode.UpArrow))
+                velocity = 2f;
+            else if (Input.GetKey(KeyCode.DownArrow))
+                velocity = -2f;
+            else
+                velocity = 0f;
+
+            if (Input.GetKey(KeyCode.LeftArrow))
+                directionAngularVelocity = -1f;
+            else if (Input.GetKey(KeyCode.RightArrow))
+                directionAngularVelocity = 1f;
+            else
+                directionAngularVelocity = 0f;
+#else
             var elapsedFrame = _currentFrame - _initFrame;
             if (elapsedFrame == 200)
                 velocity = 2f;
@@ -484,11 +486,11 @@ public class MannequinAgent : Agent
                 directionAngularVelocity = Random.Range(-1, 2);
             else if (elapsedFrame % 200 == 0)
             {
-                velocity = Random.Range(0, 2) * 2;
+                velocity = Random.Range(-1, 2) * 2;
                 directionAngularVelocity = Random.Range(-1, 2);
             }
 
-            // #endif
+#endif
             RequestDecision();
         }
 
